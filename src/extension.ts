@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 const spawnSync = require('child_process').spawnSync;
 const fs = require('fs');
-import ContentProvider, { encodeLocation } from './CscopeResultProvider';
+import {RefProvider} from './RefProvider';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,24 +20,10 @@ export function activate(context: vscode.ExtensionContext) {
     let disposableBuild = vscode.commands.registerCommand('extension.build', () => {
         buildDataBase();
     });
-
-    const provider = new ContentProvider();
-	const providerRegistrations = vscode.Disposable.from(
-		vscode.workspace.registerTextDocumentContentProvider(ContentProvider.scheme, provider)
-    );
-    
-    let disposableFindText = vscode.commands.registerTextEditorCommand('editor.findText', (editor) => {
-		const uri = encodeLocation(editor.document.uri, editor.selection.active);
-        return vscode.workspace.openTextDocument(uri).then((doc) => {
-            vscode.window.showTextDocument(doc, editor.viewColumn);
-        });
-    });
-
-    context.subscriptions.push(disposableBuild);
-	context.subscriptions.push(provider,
-		disposableFindText,
-		providerRegistrations
-    );
+ 
+    context.subscriptions.push(
+        vscode.languages.registerReferenceProvider(
+            "cpp", new RefProvider()));
 }
 
 
