@@ -18,18 +18,10 @@
         "commands": [{
             "command": "extension.build",
             "title": "Cscope: Build database"
-            },
-            {
-                "command": "editor.findText",
-                "title": "Cscope: Find text"
             }
         ],
 		"menus": {
 			"editor/context": [
-				{
-					"command": "editor.findText",
-					"group": "navigation"
-				}
 			]
         }
     },
