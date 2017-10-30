@@ -7,3 +7,11 @@
          * No option to ignore symbolic link
          * No easy way to exclude unwanted file when the project structure is complex.
      * Every time when Code is launches, all files will be checked for possible changes. This also takes long time to finish.
+
+## Usage
+    * Build database:
+        * Press F1 or Ctrl+Shift+P to open command window, select "Cscope: Build database" to start building.
+    * Find references
+        * Once database is ready to use, right click on a symbol then select "Find All References" to find all occurence of the symbol.
+    * Find definition
+        *  Once database is ready to use, right click on a symbol then select "Go to Definition " to find all possible definition of the symbol.
