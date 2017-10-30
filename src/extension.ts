@@ -20,12 +20,27 @@ export function activate(context: vscode.ExtensionContext) {
     let disposableBuild = vscode.commands.registerCommand('extension.build', () => {
         buildDataBase();
     });
- 
+
     context.subscriptions.push(
         vscode.languages.registerReferenceProvider(
-            "cpp", new RefProvider()));
+            ["cpp", "c"], new RefProvider()));
+
+    
 }
 
+function loadConfiguration()
+{
+    const fileName = vscode.workspace.rootPath + '/.vscode/cscope_conf.json';
+    try{
+        fs.accessSync(fileName, fs.constants.R_OK);
+    }
+    catch{
+        console.log("file does not exist");
+        fs.writeFileSync(fileName, "test");
+    }
+
+    const configText = fs.readFileSync(fileName);
+}
 
 function findText()
 {
@@ -34,6 +49,9 @@ function findText()
 
 function buildDataBase()
 {
+    loadConfiguration();
+    
+
     // start with linux command line since this is easier. Later shall change
     // to node api for file search.
     // Now we are building the database

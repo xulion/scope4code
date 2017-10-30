@@ -15,14 +15,14 @@
     ],
     "main": "./out/extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.build",
-            "title": "Cscope: Build database"
+        "commands": [
+            {
+                "command": "extension.build",
+                "title": "Cscope: Build database"
             }
         ],
-		"menus": {
-			"editor/context": [
-			]
+        "menus": {
+            "editor/context": []
         }
     },
     "scripts": {
