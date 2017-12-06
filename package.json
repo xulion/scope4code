@@ -19,6 +19,30 @@
             {
                 "command": "extension.build",
                 "title": "Cscope: Build database"
+            },
+            {
+                "command": "extension.findSymbol",
+                "title": "Cscope: Find this C symbol"
+            },
+            {
+                "command": "extension.findDefinition",
+                "title": "Cscope: Find this function definition"
+            },
+            {
+                "command": "extension.findCallee",
+                "title": "Cscope: Find functions called by this function"
+            },
+            {
+                "command": "extension.findCaller",
+                "title": "Cscope: Find functions calling this function"
+            },
+            {
+                "command": "extension.findText",
+                "title": "Cscope: Find this text string"
+            },
+            {
+                "command": "extension.findInclude",
+                "title": "Cscope: Find files #including this file"
             }
         ],
         "menus": {
