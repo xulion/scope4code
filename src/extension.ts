@@ -55,9 +55,9 @@ export function activate(context: vscode.ExtensionContext) {
         findText();
     });
 
-    const findIncludeCmd = vscode.commands.registerCommand('extension.findInclude', () => {
+/*    const findIncludeCmd = vscode.commands.registerCommand('extension.findInclude', () => {
         findInclude();
-    });
+    });*/
 
     context.subscriptions.push(vscode.languages.registerReferenceProvider(["cpp", "c"], new RefProvider(executor)));
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(['cpp', 'c'], new DefinitionProvider(executor)));
