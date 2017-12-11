@@ -61,7 +61,7 @@ export default class CscopeExecutor {
         return true;
     }
 
-    private execCommand(targetText:string, level:number):SymbolLocation[]{
+    public execCommand(targetText:string, level:number):SymbolLocation[]{
         const cscopeExecConfig = {
             cwd: this.exec_path + '/cscope',
             env: process.env};
