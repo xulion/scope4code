@@ -75,8 +75,15 @@ export default class CscopeExecutor {
             {
                 let fileName = contents[0];
                 console.log(fileName);
-                const lineNum = parseInt(contents[2]) - 1;
-                list.push(new SymbolLocation(fileName, lineNum, 0, 0));
+                const lineNum = parseInt(contents[2]);
+
+                let otherText = contents[1];
+                for (let i = 3; i < contents.length; ++i)
+                {
+                    otherText += ` ${contents[i]}`;
+                }
+
+                list.push(new SymbolLocation(fileName, lineNum, 0, 0, otherText));
             }
         });
 
