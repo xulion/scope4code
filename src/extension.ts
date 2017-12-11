@@ -9,7 +9,6 @@ import {DefinitionProvider} from './DefinitionProvider';
 import CscopeExecutor from './CscopeExecutor';
 import SearchResultProvider, {openSearch} from './SearchResultProvider';
 
-
 let configurations = null;
 
 // this method is called when your extension is activated
