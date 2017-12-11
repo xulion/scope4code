@@ -1,6 +1,9 @@
 # VS Code cscope support
      This extension add cscope support for Visual Studio Code. Currently it supports only C/C++.
 
+## This extension is still very preliminary.
+     This is the very early release of cscope support in vs code. If you encounter any issue, pls log it [here](https://github.com/xulion/scope4code/issues) 
+
 ## Who may need this extension
 Visual Studio Code C/C++ extension already supported tag parsing and symbol searching, which is based on Clang tag system. However, when working with a very large projects, the way it currently works could be very annoying:
 * The extension will try search all the folders for all source code while creating database. It takes hours to build the database.
