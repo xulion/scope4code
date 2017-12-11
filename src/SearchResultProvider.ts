@@ -5,10 +5,12 @@ import CscopeExecutor from './CscopeExecutor';
 
 export default class SearchResultProvider implements 
             vscode.TextDocumentContentProvider, vscode.DocumentLinkProvider{
-    executor:CscopeExecutor = null;
+    private executor:CscopeExecutor = null;
+    private links: vscode.DocumentLink[];
     
     constructor (executor : CscopeExecutor){
         this.executor = executor;
+        this.links = [];
     }
 
     dispose() {
@@ -22,15 +24,23 @@ export default class SearchResultProvider implements
 
         const fileList = this.executor.execCommand(symbol, functionIndex);
         let content = '';
+        let lineNum = 1;
+        const workspacePathLen = vscode.workspace.rootPath.length;
         fileList.forEach((line) =>{
-            content += line.fileName + ':' + line.lineNum + '\n';
+            const fileInfo = line.fileName.slice(workspacePathLen) + ':' + line.lineNum
+            content += fileInfo + ` ${line.otherText}\n`;
+            const linkRange = new vscode.Range(lineNum, 0, lineNum, fileInfo.length);
+            const linkTarget = vscode.Uri.parse(`file:/${line.fileName}#${line.lineNum}`);
+            const docLink = new vscode.DocumentLink(linkRange, linkTarget);
+            this.links.push(docLink);
+            lineNum++;
         });
     
         return briefing + content;
     }
 
     provideDocumentLinks(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.DocumentLink[]>{
-        return null;        
+        return this.links;        
     }
     
 }
