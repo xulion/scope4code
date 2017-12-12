@@ -1,5 +1,5 @@
 # VS Code cscope support
-     This extension add cscope support for Visual Studio Code. Currently it supports only C/C++.
+This extension add cscope support for Visual Studio Code. Currently it supports only C/C++.
 
 ## Who may need this extension
 Visual Studio Code C/C++ extension already supported tag parsing and symbol searching, which is based on Clang tag system. However, when working with a very large projects, the way it currently works could be very annoying:
@@ -9,6 +9,8 @@ Visual Studio Code C/C++ extension already supported tag parsing and symbol sear
 * Every time when there is code change, it tries to update the database which might take another hour or so. If developper is keep changing code, the extension will keep running and keep occupying a lot of processor time.
 
 ## Usage
+* Dependency:
+    * In order to use this extension, cscope has to be installed and shall be accessible via command line. The extension is designed to call 'cscope' command line to get everything done. It might not work in Windows.
 * Build database:
     * Press F1 or Ctrl+Shift+P to open command window, select "Cscope: Build database" to start building.
 * Find all references

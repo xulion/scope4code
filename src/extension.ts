@@ -97,13 +97,7 @@ function loadConfiguration():string
 
 function buildDataBase()
 {
-//    const configurations = JSON.parse(loadConfiguration());
     const sourcePaths = configurations.engine_configurations[0].cscope.paths;
-
-    // start with linux command line since this is easier. Later shall change
-    // to node api for file search.5
-    // Now we are building the database
-    vscode.window.showInformationMessage('Building cscope database!');
 
     const execConfig = {
         cwd: vscode.workspace.rootPath,
@@ -116,10 +110,19 @@ function buildDataBase()
         paths.push(fullPath);
     });
 
+    // start with linux command line since this is easier. Later shall change
+    // to node api for file search.5
+    // Now we are building the database
     const executor = new CscopeExecutor(paths, vscode.workspace.rootPath + '/.vscode');
-    executor.buildDataBase();
 
-    vscode.window.showInformationMessage('Building finished!');
+    if (executor.checkTool()) {
+        vscode.window.showInformationMessage('Building cscope database!');
+        executor.buildDataBase();
+        vscode.window.showInformationMessage('Building finished!');
+    }
+    else {
+        vscode.window.showInformationMessage('cscope command is not detected, please ensure cscope command is accessible.');
+    }
 }
 
 function findSymbol()
