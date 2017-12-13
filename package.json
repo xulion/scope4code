@@ -2,11 +2,21 @@
     "name": "codescope",
     "displayName": "scope4code",
     "description": "cscope for vs code",
-    "version": "0.0.2",
+    "version": "0.0.5",
     "publisher": "xulion",
     "engines": {
         "vscode": "^1.17.0"
     },
+    "license": "SEE LICENSE IN LICENSE",
+    "bugs": {
+        "url": "https://github.com/xulion/scope4code/issues",
+        "email": "xulion.xulion@gmail.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/xulion/scope4code"
+    },
+    "homepage": "https://github.com/xulion/scope4code/blob/master/README.md",
     "categories": [
         "Languages", "Other"
     ],
@@ -61,14 +71,5 @@
         "vscode": "^1.1.5",
         "@types/node": "^7.0.43",
         "@types/mocha": "^2.2.42"
-    },
-    "license": "SEE LICENSE IN LICENSE.txt",
-    "bugs": {
-        "url": "https://github.com/xulion/scope4code/issues",
-        "email": "xulion.xulion@gmail.com"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/xulion/scope4code"
-    },
-    "homepage": "https://github.com/xulion/scope4code/blob/master/README.md"}
+    }
+}

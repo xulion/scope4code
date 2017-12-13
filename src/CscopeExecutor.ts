@@ -27,6 +27,33 @@ export default class CscopeExecutor {
         this.exec_path = exec_path;
     }
 
+    public checkTool():boolean{
+        const cscopeExecConfig = {
+            cwd: this.exec_path,
+            env: process.env};
+
+        const ret = spawnSync("cscope", ['-V'], cscopeExecConfig);
+        let toolAvailable = false;
+        if ((ret.stdout) && (ret.stdout.length > 0))
+        {
+            if (ret.stdout.toString().search("cscope: version.*") === 0)
+            {
+                toolAvailable = true;
+            }                
+        }
+        else if ((ret.stderr) && (ret.stderr.length > 0)){
+            if (ret.stderr.toString().search("cscope: version.*") === 0)
+            {
+                toolAvailable = true;
+            }
+            else{
+                console.log(ret.stderr.toString());                
+            }
+    
+        } 
+        return toolAvailable;
+    }
+
     public buildDataBase():boolean{
         let start = true;
         this.source_paths.forEach((path) => {
