@@ -2,12 +2,12 @@
     "name": "codescope",
     "displayName": "scope4code",
     "description": "cscope for vs code",
-    "version": "0.0.2",
+    "version": "0.0.4",
     "publisher": "xulion",
     "engines": {
         "vscode": "^1.17.0"
     },
-    "license": "SEE LICENSE IN LICENS",
+    "license": "SEE LICENSE IN LICENSE",
     "bugs": {
         "url": "https://github.com/xulion/scope4code/issues",
         "email": "xulion.xulion@gmail.com"
