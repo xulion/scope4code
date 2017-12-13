@@ -67,8 +67,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 const defaultConfig = 
 '{\n' +
-'    "version": "0.0.1",\n' +
-'    "open_new_column" : "yes",\n' +
+'    "version": "0.0.5",\n' +
+'    "open_new_column" : "no",\n' +
 '    "engine_configurations": [\n' +
 '        {\n' + 
 '            "cscope" : {\n' + 
@@ -87,11 +87,19 @@ function loadConfiguration():string
         fs.accessSync(fileName, fs.constants.R_OK);
     }
     catch{
-        console.log("file does not exist");
+        console.log("config file does not exist");
         fs.writeFileSync(fileName, defaultConfig);
     }
 
-    const configText = fs.readFileSync(fileName).toString();
+    let configText = fs.readFileSync(fileName).toString();
+    try {
+        JSON.parse(configText);
+    }
+    catch{
+        console.log("config file is broken");
+        fs.writeFileSync(fileName, defaultConfig);
+        configText = defaultConfig;
+    }
     return configText;
 }
 
