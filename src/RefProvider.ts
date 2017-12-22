@@ -25,7 +25,7 @@ export class RefProvider implements vscode.ReferenceProvider {
                 let list = [];
                 fileList.forEach((line) =>{
                     let fileName = line.fileName;
-                    console.log(fileName);
+//                    console.log(fileName);
                     const lineNum = line.lineNum - 1;
                     let start_pos = new vscode.Position(lineNum, line.colStart);
                     let end_pos = new vscode.Position(lineNum, line.colEnd);

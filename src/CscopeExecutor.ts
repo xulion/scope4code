@@ -101,7 +101,7 @@ export default class CscopeExecutor {
             if (contents.length > 3)
             {
                 let fileName = contents[0];
-                console.log(fileName);
+//                console.log(fileName);
                 const lineNum = parseInt(contents[2]);
 
                 let otherText = contents[1];

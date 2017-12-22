@@ -2,45 +2,51 @@
 
 import * as vscode from 'vscode';
 import CscopeExecutor from './CscopeExecutor';
+import FindResultDoc from './FindResultDoc';
 
 export default class SearchResultProvider implements 
             vscode.TextDocumentContentProvider, vscode.DocumentLinkProvider{
     private executor:CscopeExecutor = null;
-    private links: vscode.DocumentLink[];
+    private docs: FindResultDoc[];
     
     constructor (executor : CscopeExecutor){
         this.executor = executor;
-        this.links = [];
+        this.docs = [];
     }
 
     dispose() {
+        this.docs.length = 0;
     }
     
     static scheme = "search";
 
-    provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string>{
-        const [briefText, symbol, functionIndex] = <[string, string, number]>JSON.parse(uri.query);
-        const briefing = `${briefText} "${symbol}":\n`;
+    private getDoc(uri: vscode.Uri) : FindResultDoc{
+        let resultDoc = null;
 
-        const fileList = this.executor.execCommand(symbol, functionIndex);
-        let content = '';
-        let lineNum = 1;
-        const workspacePathLen = vscode.workspace.rootPath.length;
-        fileList.forEach((line) =>{
-            const fileInfo = line.fileName.slice(workspacePathLen) + ':' + line.lineNum
-            content += fileInfo + ` ${line.otherText}\n`;
-            const linkRange = new vscode.Range(lineNum, 0, lineNum, fileInfo.length);
-            const linkTarget = vscode.Uri.parse(`file:/${line.fileName}#${line.lineNum}`);
-            const docLink = new vscode.DocumentLink(linkRange, linkTarget);
-            this.links.push(docLink);
-            lineNum++;
-        });
-    
-        return briefing + content;
+        for (let i = 0; i < this.docs.length; ++i){
+            if (this.docs[i].getUri() === uri.toString()) {
+                resultDoc = this.docs[i];
+                break;
+            }
+        }
+
+        if (!resultDoc){
+            resultDoc = new FindResultDoc(uri, this.executor);
+            this.docs.push(resultDoc);
+        }
+        
+        return resultDoc;
+    }
+
+    provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string>{
+
+        const resultDoc = this.getDoc(uri);
+        return resultDoc.getDocContent();
     }
 
     provideDocumentLinks(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.DocumentLink[]>{
-        return this.links;        
+        const resultDoc = this.getDoc(document.uri);
+        return resultDoc.getDocLinks();
     }
     
 }
