@@ -8,60 +8,76 @@ import {RefProvider} from './RefProvider';
 import {DefinitionProvider} from './DefinitionProvider';
 import CscopeExecutor from './CscopeExecutor';
 import SearchResultProvider, {openSearch} from './SearchResultProvider';
+import OutputInterface from './OutputInterface';
 
 let configurations = null;
+
+class VscodeOutput implements OutputInterface {
+    diagLog(diagInfo:string) {
+        console.log("scope4code: " + diagInfo);
+    }
+
+    errorToUser(errorMsg:string) {
+        vscode.window.showErrorMessage("scope4code: " + errorMsg);
+    }
+};
+
+const out = new VscodeOutput;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
-    configurations = JSON.parse(loadConfiguration());
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
-
-    const executor = new CscopeExecutor(null, vscode.workspace.rootPath + '/.vscode');
-    const searchResult = new SearchResultProvider(executor);
-
-	const providerRegistrations = vscode.Disposable.from(
-		vscode.workspace.registerTextDocumentContentProvider(SearchResultProvider.scheme, searchResult),
-		vscode.languages.registerDocumentLinkProvider({ scheme: SearchResultProvider.scheme }, searchResult)
-    );
+    //start initializing environment only after a workspace folder is opened
+    if (vscode.workspace.rootPath)
+    {
+        configurations = JSON.parse(loadConfiguration());
+        // Use the console to output diagnostic information (console.log) and errors (console.error)
+        // This line of code will only be executed once when your extension is activated
     
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
-    const disposableBuild = vscode.commands.registerCommand('extension.build', () => {
-        buildDataBase();
-    });
+        const executor = new CscopeExecutor(null, vscode.workspace.rootPath + '/.vscode', out);
+        const searchResult = new SearchResultProvider(executor);
     
-    const findSymbolCmd = vscode.commands.registerCommand('extension.findSymbol', () => {
-        findSymbol();
-    });
-
-    const findDefinitionCmd = vscode.commands.registerCommand('extension.findDefinition', () => {
-        findDefinition();
-    });
-
-    const findCalleeCmd = vscode.commands.registerCommand('extension.findCallee', () => {
-        findCallee();
-    });
-
-    const findCallerCmd = vscode.commands.registerCommand('extension.findCaller', () => {
-        findCaller();
-    });
-
-    const findTextCmd = vscode.commands.registerCommand('extension.findText', () => {
-        findText();
-    });
-
-/*    const findIncludeCmd = vscode.commands.registerCommand('extension.findInclude', () => {
-        findInclude();
-    });*/
-
-    context.subscriptions.push(vscode.languages.registerReferenceProvider(["cpp", "c"], new RefProvider(executor)));
-    context.subscriptions.push(vscode.languages.registerDefinitionProvider(['cpp', 'c'], new DefinitionProvider(executor)));
-	context.subscriptions.push(searchResult, providerRegistrations, findCalleeCmd);    
-	context.subscriptions.push(findCallerCmd, findTextCmd);//, findIncludeCmd);    
+        const providerRegistrations = vscode.Disposable.from(
+            vscode.workspace.registerTextDocumentContentProvider(SearchResultProvider.scheme, searchResult),
+            vscode.languages.registerDocumentLinkProvider({ scheme: SearchResultProvider.scheme }, searchResult)
+        );
+        
+        // The command has been defined in the package.json file
+        // Now provide the implementation of the command with  registerCommand
+        // The commandId parameter must match the command field in package.json
+        const disposableBuild = vscode.commands.registerCommand('extension.build', () => {
+            buildDataBase();
+        });
+        
+        const findSymbolCmd = vscode.commands.registerCommand('extension.findSymbol', () => {
+            findSymbol();
+        });
+    
+        const findDefinitionCmd = vscode.commands.registerCommand('extension.findDefinition', () => {
+            findDefinition();
+        });
+    
+        const findCalleeCmd = vscode.commands.registerCommand('extension.findCallee', () => {
+            findCallee();
+        });
+    
+        const findCallerCmd = vscode.commands.registerCommand('extension.findCaller', () => {
+            findCaller();
+        });
+    
+        const findTextCmd = vscode.commands.registerCommand('extension.findText', () => {
+            findText();
+        });
+    
+    /*    const findIncludeCmd = vscode.commands.registerCommand('extension.findInclude', () => {
+            findInclude();
+        });*/
+    
+        context.subscriptions.push(vscode.languages.registerReferenceProvider(["cpp", "c"], new RefProvider(executor)));
+        context.subscriptions.push(vscode.languages.registerDefinitionProvider(['cpp', 'c'], new DefinitionProvider(executor)));
+        context.subscriptions.push(searchResult, providerRegistrations, findCalleeCmd);    
+        context.subscriptions.push(findCallerCmd, findTextCmd);//, findIncludeCmd);    
+    }
 }
 
 const defaultConfig = 
@@ -82,11 +98,21 @@ const defaultConfig =
 function loadConfiguration():string
 {
     const fileName = vscode.workspace.rootPath + '/.vscode/cscope_conf.json';
+    const vscodePath = vscode.workspace.rootPath + '/.vscode';
+
+    try{
+        fs.accessSync(vscodePath, fs.constants.R_OK | fs.constants.W_OK);
+    }
+    catch{
+        out.diagLog(".vscode folder does not exist, creating new one");
+        fs.mkdirSync(vscodePath);
+    }
+    
     try{
         fs.accessSync(fileName, fs.constants.R_OK);
     }
     catch{
-        console.log("config file does not exist");
+        out.diagLog("cscope_conf.json does not exist, creating new one");
         fs.writeFileSync(fileName, defaultConfig);
     }
 
@@ -95,7 +121,7 @@ function loadConfiguration():string
         JSON.parse(configText);
     }
     catch{
-        console.log("config file is broken");
+        out.diagLog("cscope_conf.json is invalid, creating new one");
         fs.writeFileSync(fileName, defaultConfig);
         configText = defaultConfig;
     }
@@ -120,7 +146,7 @@ function buildDataBase()
     // start with linux command line since this is easier. Later shall change
     // to node api for file search.5
     // Now we are building the database
-    const executor = new CscopeExecutor(paths, vscode.workspace.rootPath + '/.vscode');
+    const executor = new CscopeExecutor(paths, vscode.workspace.rootPath + '/.vscode', out);
 
     if (executor.checkTool()) {
         vscode.window.showInformationMessage('Building cscope database!');

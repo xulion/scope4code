@@ -16,15 +16,30 @@ cscope find command:
 const spawnSync = require('child_process').spawnSync;
 const fs = require('fs');
 import SymbolLocation from './SymbolLocation';
+import OutputInterface from './OutputInterface';
 
 export default class CscopeExecutor {
     source_paths:string[];
     exec_path:string;
+    outInf:OutputInterface;
 
-    constructor(source_paths:string[], exec_path:string)
+    constructor(source_paths:string[], exec_path:string, out:OutputInterface)
     {
         this.source_paths = source_paths;
         this.exec_path = exec_path;
+        this.outInf = out;
+    }
+
+    private databaseReady():boolean {
+        try {
+            fs.accessSync(this.exec_path + '/cscope/cscope.out', fs.constants.R_OK | fs.constants.W_OK);
+            return true;
+        }
+        catch (err)
+        {
+            console.log(err.toString());                
+            return false;
+        }
     }
 
     public checkTool():boolean{
@@ -47,14 +62,37 @@ export default class CscopeExecutor {
                 toolAvailable = true;
             }
             else{
-                console.log(ret.stderr.toString());                
+                this.outInf.diagLog(ret.stderr.toString());                
             }
     
         } 
         return toolAvailable;
     }
 
+    private verifyCscope():boolean {
+        if (!this.checkTool())
+        {
+            this.outInf.errorToUser("cscope is not installed (or not added to PATH)");                
+            return false;
+        }
+
+        if (!this.databaseReady())
+        {
+            this.outInf.errorToUser("No database found, pls build and try again!");                
+            return false;
+        }
+
+        return true;
+    }
+
     public buildDataBase():boolean{
+
+        if (!this.checkTool())
+        {
+            this.outInf.errorToUser("cscope is not installed (or not added to PATH)");
+            return false;
+        }
+
         let start = true;
         this.source_paths.forEach((path) => {
             const execConfig = {
@@ -89,6 +127,11 @@ export default class CscopeExecutor {
     }
 
     public execCommand(targetText:string, level:number):SymbolLocation[]{
+
+        if (!this.verifyCscope()) {
+            return null;
+        }
+
         const cscopeExecConfig = {
             cwd: this.exec_path + '/cscope',
             env: process.env};
