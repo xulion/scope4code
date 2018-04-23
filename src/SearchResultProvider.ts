@@ -54,19 +54,31 @@ export default class SearchResultProvider implements
 export function openSearch(brief:string, functionIndex:number, columnMode : boolean){
     if (vscode.window){
         if (vscode.window.activeTextEditor){
+
             const position = vscode.window.activeTextEditor.selection.active;
             const document = vscode.window.activeTextEditor.document;
             const symbol = document.getText(document.getWordRangeAtPosition(position));
-            const query = JSON.stringify([brief, symbol, functionIndex]); //Find functions called by this function
-            let docUri = vscode.Uri.parse(`${SearchResultProvider.scheme}:${symbol}.find ?${query}`);
-            let viewColumn = vscode.window.activeTextEditor.viewColumn;
-            if (columnMode)
-            {
-                viewColumn += 1;
-            }
-            return vscode.workspace.openTextDocument(docUri).then((doc) => {
-                vscode.window.showTextDocument(doc.uri, {viewColumn:viewColumn, preserveFocus:false, preview:false});
+
+            vscode.window.showInputBox({ value: symbol, prompt: "Enter the text", 
+                                        placeHolder: "", password: false }).then( (info) => {
+                if (info !== undefined && info.length > 0) {
+                    vscode.window.setStatusBarMessage(info);
+                    const query = JSON.stringify([brief, symbol, functionIndex]);
+                    let docUri = vscode.Uri.parse(`${SearchResultProvider.scheme}:${symbol}.find ?${query}`);
+                    let viewColumn = vscode.window.activeTextEditor.viewColumn;
+                    if (columnMode)
+                    {
+                        viewColumn += 1;
+                    }
+                    return vscode.workspace.openTextDocument(docUri).then((doc) => {
+                        vscode.window.showTextDocument(doc.uri, {viewColumn:viewColumn, preserveFocus:false, preview:false});
+                    });
+
+                } else {
+                    vscode.window.setStatusBarMessage("no text provided");
+                }
             });
+
         }
     }
 }

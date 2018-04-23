@@ -31,5 +31,3 @@ Visual Studio Code C/C++ extension already supported tag parsing and symbol sear
     * Below settings are supported:
         * open_new_column - This flag controls how shall new .find window shall be opened. 'yes' means it shall be opened in a separate column while 'no' will open in a new tab. Default setting is no since v0.0.5.
         * engine_configurations.cscope.paths - This is an array of the paths of all source code to be parsed. It allows to include paths that outside of the vs code project. Default value is ${workspaceRoot}.
-
-        
