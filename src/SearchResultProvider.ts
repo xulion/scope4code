@@ -63,8 +63,8 @@ export function openSearch(brief:string, functionIndex:number, columnMode : bool
                                         placeHolder: "", password: false }).then( (info) => {
                 if (info !== undefined && info.length > 0) {
                     vscode.window.setStatusBarMessage(info);
-                    const query = JSON.stringify([brief, symbol, functionIndex]);
-                    let docUri = vscode.Uri.parse(`${SearchResultProvider.scheme}:${symbol}.find ?${query}`);
+                    const query = JSON.stringify([brief, info, functionIndex]);
+                    let docUri = vscode.Uri.parse(`${SearchResultProvider.scheme}:${info}.find ?${query}`);
                     let viewColumn = vscode.window.activeTextEditor.viewColumn;
                     if (columnMode)
                     {
