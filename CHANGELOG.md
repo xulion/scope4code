@@ -1,3 +1,5 @@
+## [Beta v0.0.8]
+- Fixed issue that symbol from input box is not working.
 ## [Beta v0.0.7]
 - Support editing symbols (or type in symbols) before search.
 - In the latest version of vscode, folder .vscode will not be created by default. Previous version assumed the folder is ready thus it fails to create files. This update will automatically create the folder if the folder is not detected.
