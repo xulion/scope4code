@@ -122,7 +122,7 @@ export default class CscopeExecutor {
         const cscopeExecConfig = {
             cwd: this.exec_path + '/cscope',
             env: process.env};
-        const ret = spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
+        const ret = spawnSync("cscope", ['-b', '-q', '-k', '-R'], cscopeExecConfig);
         return true;
     }
 
