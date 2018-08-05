@@ -11,6 +11,7 @@ import SearchResultProvider, {openSearch} from './SearchResultProvider';
 import OutputInterface from './OutputInterface';
 
 let configurations = null;
+const configPath = vscode.workspace.rootPath + '/.vscode/cscope_conf.json';
 
 class VscodeOutput implements OutputInterface {
     diagLog(diagInfo:string) {
@@ -97,7 +98,6 @@ const defaultConfig =
 
 function loadConfiguration():string
 {
-    const fileName = vscode.workspace.rootPath + '/.vscode/cscope_conf.json';
     const vscodePath = vscode.workspace.rootPath + '/.vscode';
 
     try{
@@ -109,28 +109,46 @@ function loadConfiguration():string
     }
     
     try{
-        fs.accessSync(fileName, fs.constants.R_OK);
+        fs.accessSync(configPath, fs.constants.R_OK);
     }
     catch{
         out.diagLog("cscope_conf.json does not exist, creating new one");
-        fs.writeFileSync(fileName, defaultConfig);
+        fs.writeFileSync(configPath, defaultConfig);
     }
 
-    let configText = fs.readFileSync(fileName).toString();
+    let configText = fs.readFileSync(configPath).toString();
     try {
         JSON.parse(configText);
     }
     catch{
         out.diagLog("cscope_conf.json is invalid, creating new one");
-        fs.writeFileSync(fileName, defaultConfig);
+        fs.writeFileSync(configPath, defaultConfig);
         configText = defaultConfig;
     }
     return configText;
 }
 
+// Reload and return new configurations if it is valid.
+// If any error occured, return the old one.
+function reloadConfiguration():any
+{
+    let ret = configurations;
+
+    try {
+        ret = JSON.parse(fs.readFileSync(configPath).toString());
+    }
+    catch {
+        // Creating new one is not a good idea here
+        // because user may not have finished his modification.
+        vscode.window.showErrorMessage('cscope_conf.json is invalid');
+    }
+    return ret;
+}
+
 function buildDataBase()
 {
-    const sourcePaths = configurations.engine_configurations[0].cscope.paths;
+    let newConfig = reloadConfiguration();
+    const sourcePaths = newConfig.engine_configurations[0].cscope.paths;
 
     const execConfig = {
         cwd: vscode.workspace.rootPath,
