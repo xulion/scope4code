@@ -136,7 +136,7 @@ export default class CscopeExecutor {
             cwd: this.exec_path + '/cscope',
             env: process.env};
 
-        let ret = spawnSync("cscope", ['-L' + level + targetText], cscopeExecConfig);
+        let ret = spawnSync("cscope", ['-q', '-L' + level + targetText], cscopeExecConfig);
         const fileList = ret.stdout.toString().split('\n');
         let list = [];
         fileList.forEach((line) =>{
