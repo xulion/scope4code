@@ -14,20 +14,46 @@ cscope find command:
 */
 
 const spawnSync = require('child_process').spawnSync;
+const spawn = require('child_process').spawn;
 const fs = require('fs');
 import SymbolLocation from './SymbolLocation';
 import OutputInterface from './OutputInterface';
+
+function cmdRunner(cmd, args, option):Promise<any> {
+    return new Promise((resolve, reject) => {
+        const ret = spawn(cmd, args, option);
+        let result = {
+            stdout:[],
+            stderr:[]
+        };
+
+        ret.stdout.on('data', (data) => {
+            result.stdout += data;
+        });
+
+        ret.stderr.on('data', (data) => {
+            result.stderr = data;
+            console.log(data.toString())
+        });
+
+        ret.on('close', (code) => {
+            resolve(result);
+        });
+    });
+}
 
 export default class CscopeExecutor {
     source_paths:string[];
     exec_path:string;
     outInf:OutputInterface;
+    executorBusy:boolean;
 
     constructor(source_paths:string[], exec_path:string, out:OutputInterface)
     {
         this.source_paths = source_paths;
         this.exec_path = exec_path;
         this.outInf = out;
+        this.executorBusy = false;
     }
 
     private databaseReady():boolean {
@@ -37,9 +63,38 @@ export default class CscopeExecutor {
         }
         catch (err)
         {
-            console.log(err.toString());                
+            console.log(err.toString());
             return false;
         }
+    }
+
+    private async checkToolSync():Promise<boolean> {
+        const cscopeExecConfig = {
+            cwd: this.exec_path,
+            env: process.env};
+
+        let result = await cmdRunner("cscope", ['-V'], cscopeExecConfig);
+
+        let toolAvailable = false;
+        if ((result.stdout) && (result.stdout.length > 0))
+        {
+            if (result.stdout.toString().search("cscope: version.*") === 0)
+            {
+                toolAvailable = true;
+            }                
+        }
+        else if ((result.stderr) && (result.stderr.length > 0)){
+            if (result.stderr.toString().search("cscope: version.*") === 0)
+            {
+                toolAvailable = true;
+            }
+            else{
+                this.outInf.updateState("not detected");
+            }
+    
+        } 
+
+        return toolAvailable;
     }
 
     public checkTool():boolean{
@@ -62,67 +117,88 @@ export default class CscopeExecutor {
                 toolAvailable = true;
             }
             else{
-                this.outInf.diagLog(ret.stderr.toString());                
+                this.outInf.updateState("not detected");
             }
     
         } 
         return toolAvailable;
     }
 
-    private verifyCscope():boolean {
+    public verifyCscope():boolean {
         if (!this.checkTool())
         {
+            this.outInf.updateState("not detected");
             this.outInf.errorToUser("cscope is not installed (or not added to PATH)");                
             return false;
         }
 
         if (!this.databaseReady())
         {
-            this.outInf.errorToUser("No database found, pls build and try again!");                
+            this.outInf.updateState("no database");
             return false;
         }
+
+        this.outInf.updateState("database ready");
 
         return true;
     }
 
     public buildDataBase():boolean{
 
-        if (!this.checkTool())
-        {
-            this.outInf.errorToUser("cscope is not installed (or not added to PATH)");
-            return false;
+        if (!this.executorBusy) {
+            this.outInf.updateState("building...");
+            this.checkToolSync().then( (value) => {
+                if (value) {
+                    let start = true;
+                    this.source_paths.forEach((path) => {
+                        const execConfig = {
+                            cwd: this.exec_path,
+                            env: process.env};
+                
+                        let ret = spawnSync("mkdir", ['-p', 'cscope'], execConfig);
+                        ret = spawnSync("find", [path, '-type', 'f', '-name', '*.c', 
+                                        '-o', '-type', 'f', '-name', '*.h', 
+                                        '-o', '-type', 'f', '-name', '*.cpp', 
+                                        '-o', '-type', 'f', '-name', '*.cc', 
+                                        '-o', '-type', 'f', '-name', '*.mm'], execConfig);
+                        if (ret.stderr.length > 0) {
+                            console.log(ret.stderr.toString());
+                        }
+                        else {
+                            if (start) {
+                                fs.writeFileSync(this.exec_path + '/cscope/cscope.files', ret.stdout.toString());
+                            }
+                            else{
+                                fs.appendFileSync(this.exec_path + '/cscope/cscope.files', ret.stdout.toString());
+                            }
+                            start = false;
+                        }
+                    });
+                
+                    const cscopeExecConfig = {
+                        cwd: this.exec_path + '/cscope',
+                        env: process.env};
+                    const ret = spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
+                    if ((ret.stderr) && (ret.stderr.length > 0)) {
+                        this.outInf.errorToUser(ret.stderr.toString());
+                    }
+                    else if (ret.stdout.toString().search("fail") === 0) {
+                        this.outInf.errorToUser(ret.stdout.toString());
+                    }
+                    else {
+                        this.outInf.notifyUser("database build finished.");
+                        this.outInf.updateState("database ready");    
+                    }
+                }
+                else {
+                    this.outInf.updateState("not detected");
+                }
+            })
+        }
+        else {
+            this.outInf.notifyUser("busy.");
         }
 
-        let start = true;
-        this.source_paths.forEach((path) => {
-            const execConfig = {
-                cwd: this.exec_path,
-                env: process.env};
-    
-            let ret = spawnSync("mkdir", ['-p', 'cscope'], execConfig);
-            ret = spawnSync("find", [path, '-type', 'f', '-name', '*.c', 
-                               '-o', '-type', 'f', '-name', '*.h', 
-                               '-o', '-type', 'f', '-name', '*.cpp', 
-                               '-o', '-type', 'f', '-name', '*.cc', 
-                               '-o', '-type', 'f', '-name', '*.mm'], execConfig);
-            if (ret.stderr.length > 0) {
-                console.log(ret.stderr.toString());
-            }
-            else {
-                if (start) {
-                    fs.writeFileSync(this.exec_path + '/cscope/cscope.files', ret.stdout.toString());
-                }
-                else{
-                    fs.appendFileSync(this.exec_path + '/cscope/cscope.files', ret.stdout.toString());
-                }
-                start = false;
-            }
-        });
-    
-        const cscopeExecConfig = {
-            cwd: this.exec_path + '/cscope',
-            env: process.env};
-        const ret = spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
         return true;
     }
 
@@ -132,30 +208,37 @@ export default class CscopeExecutor {
             return null;
         }
 
-        const cscopeExecConfig = {
+        let list = [];
+
+        if (!this.executorBusy) {
+
+            const cscopeExecConfig = {
             cwd: this.exec_path + '/cscope',
             env: process.env};
 
-        let ret = spawnSync("cscope", ['-q', '-L' + level + targetText], cscopeExecConfig);
-        const fileList = ret.stdout.toString().split('\n');
-        let list = [];
-        fileList.forEach((line) =>{
-            const contents = line.split(' ');
-            if (contents.length > 3)
-            {
-                let fileName = contents[0];
-//                console.log(fileName);
-                const lineNum = parseInt(contents[2]);
-
-                let otherText = contents[1];
-                for (let i = 3; i < contents.length; ++i)
+            let ret = spawnSync("cscope", ['-q', '-L' + level + targetText], cscopeExecConfig);
+            const fileList = ret.stdout.toString().split('\n');
+            fileList.forEach((line) =>{
+                const contents = line.split(' ');
+                if (contents.length > 3)
                 {
-                    otherText += ` ${contents[i]}`;
-                }
+                    let fileName = contents[0];
+    //                console.log(fileName);
+                    const lineNum = parseInt(contents[2]);
 
-                list.push(new SymbolLocation(fileName, lineNum, 0, 0, otherText));
-            }
-        });
+                    let otherText = contents[1];
+                    for (let i = 3; i < contents.length; ++i)
+                    {
+                        otherText += ` ${contents[i]}`;
+                    }
+
+                    list.push(new SymbolLocation(fileName, lineNum, 0, 0, otherText));
+                }
+            });
+        }
+        else {
+            this.outInf.notifyUser("busy.");
+        }
 
         return list;
     }

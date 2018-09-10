@@ -2,7 +2,7 @@
     "name": "codescope",
     "displayName": "scope4code",
     "description": "cscope for vs code",
-    "version": "0.0.8",
+    "version": "0.0.10",
     "publisher": "xulion",
     "engines": {
         "vscode": "^1.17.0"
@@ -18,7 +18,8 @@
     },
     "homepage": "https://github.com/xulion/scope4code/blob/master/README.md",
     "categories": [
-        "Languages", "Other"
+        "Languages",
+        "Other"
     ],
     "activationEvents": [
         "*",
@@ -64,13 +65,11 @@
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
         "typescript": "^2.5.3",
         "vscode": "^1.1.5",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+        "@types/node": "^7.0.43"
     }
 }

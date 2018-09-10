@@ -13,6 +13,20 @@ import OutputInterface from './OutputInterface';
 let configurations = null;
 const configPath = vscode.workspace.rootPath + '/.vscode/cscope_conf.json';
 
+let status = null;
+
+function updateStatus(text) {
+    if (status) {
+        status.text = text;
+
+        if (text) {
+            status.show();
+        } else {
+            status.hide();
+        }
+    }
+}
+
 class VscodeOutput implements OutputInterface {
     diagLog(diagInfo:string) {
         console.log("scope4code: " + diagInfo);
@@ -21,6 +35,15 @@ class VscodeOutput implements OutputInterface {
     errorToUser(errorMsg:string) {
         vscode.window.showErrorMessage("scope4code: " + errorMsg);
     }
+
+    notifyUser(msg:string) {
+        vscode.window.showInformationMessage('cscope: ' + msg);
+    }
+
+    updateState(state:string) {
+        updateStatus("cscope: " + state);
+    }
+
 };
 
 const out = new VscodeOutput;
@@ -31,6 +54,9 @@ export function activate(context: vscode.ExtensionContext) {
     //start initializing environment only after a workspace folder is opened
     if (vscode.workspace.rootPath)
     {
+        status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+        context.subscriptions.push(status);
+            
         configurations = JSON.parse(loadConfiguration());
         // Use the console to output diagnostic information (console.log) and errors (console.error)
         // This line of code will only be executed once when your extension is activated
@@ -77,7 +103,10 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerReferenceProvider(["cpp", "c"], new RefProvider(executor)));
         context.subscriptions.push(vscode.languages.registerDefinitionProvider(['cpp', 'c'], new DefinitionProvider(executor)));
         context.subscriptions.push(searchResult, providerRegistrations, findCalleeCmd);    
-        context.subscriptions.push(findCallerCmd, findTextCmd);//, findIncludeCmd);    
+        context.subscriptions.push(findCallerCmd, findTextCmd);//, findIncludeCmd);   
+        
+        //to update status bar
+        executor.verifyCscope();
     }
 }
 
@@ -167,9 +196,7 @@ function buildDataBase()
     const executor = new CscopeExecutor(paths, vscode.workspace.rootPath + '/.vscode', out);
 
     if (executor.checkTool()) {
-        vscode.window.showInformationMessage('Building cscope database!');
         executor.buildDataBase();
-        vscode.window.showInformationMessage('Building finished!');
     }
     else {
         vscode.window.showInformationMessage('cscope command is not detected, please ensure cscope command is accessible.');
