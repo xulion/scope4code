@@ -1,3 +1,13 @@
+## [Beta v0.0.10]
+###New Feauture
+- Added status bar support. The current status of database (ready, no database, no cscope) will be displayed.
+###Bug fixing
+- Removed extra / from the beginning of the file path. This would allow file explorer to locate the source file.
+
+## [Beta v0.0.9]
+- Reload configuration file before building database. Older version require reload before build. <br>
+  Thanks to [Lin Chieh](https://github.com/jaycetyle)
+
 ## [Beta v0.0.8]
 - Fixed issue that symbol from input box is not working.
 

@@ -62,7 +62,6 @@ export function openSearch(brief:string, functionIndex:number, columnMode : bool
             vscode.window.showInputBox({ value: symbol, prompt: "Enter the text", 
                                         placeHolder: "", password: false }).then( (info) => {
                 if (info !== undefined && info.length > 0) {
-                    vscode.window.setStatusBarMessage(info);
                     const query = JSON.stringify([brief, info, functionIndex]);
                     let docUri = vscode.Uri.parse(`${SearchResultProvider.scheme}:${info}.find ?${query}`);
                     let viewColumn = vscode.window.activeTextEditor.viewColumn;
@@ -74,8 +73,6 @@ export function openSearch(brief:string, functionIndex:number, columnMode : bool
                         vscode.window.showTextDocument(doc.uri, {viewColumn:viewColumn, preserveFocus:false, preview:false});
                     });
 
-                } else {
-                    vscode.window.setStatusBarMessage("no text provided");
                 }
             });
 

@@ -22,7 +22,7 @@ export default class FindResultDoc {
             const fileInfo = line.fileName + ':' + line.lineNum;
             content += fileInfo + ` ${line.otherText}\n`;
             const linkRange = new vscode.Range(lineNum, 0, lineNum, fileInfo.length);
-            const linkTarget = vscode.Uri.parse(`file:/${line.fileName}#${line.lineNum}`);
+            const linkTarget = vscode.Uri.parse(`file:${line.fileName}#${line.lineNum}`);
             const docLink = new vscode.DocumentLink(linkRange, linkTarget);
             this.links.push(docLink);
             lineNum++;
