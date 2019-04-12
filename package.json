@@ -2,7 +2,7 @@
     "name": "codescope",
     "displayName": "scope4code",
     "description": "cscope for vs code",
-    "version": "0.0.10",
+    "version": "0.0.11",
     "publisher": "xulion",
     "engines": {
         "vscode": "^1.17.0"
@@ -68,8 +68,8 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
+        "@types/node": "^7.10.5",
         "typescript": "^2.5.3",
-        "vscode": "^1.1.5",
-        "@types/node": "^7.0.43"
+        "vscode": "^1.1.33"
     }
 }

@@ -1,3 +1,10 @@
+## [Beta v0.0.11]
+###New Feauture
+- None.
+###Bug fixing
+- Disabled definition provider. Current design will cause search to stuck while definition provider is running in background.
+- Updated dependency package to avoid security vulnerabilities.
+
 ## [Beta v0.0.10]
 ###New Feauture
 - Added status bar support. The current status of database (ready, no database, no cscope) will be displayed.
