@@ -1,14 +1,23 @@
+## [Beta v0.0.12]
+### New Feauture
+- Added support for placing database anywhere. Thanks to [Yves](https://github.com/ydeweerdt) for making this happen!
+
+### Bug fixing
+- None
+
 ## [Beta v0.0.11]
-###New Feauture
+### New Feauture
 - None.
-###Bug fixing
+
+### Bug fixing
 - Disabled definition provider. Current design will cause search to stuck while definition provider is running in background.
 - Updated dependency package to avoid security vulnerabilities.
 
 ## [Beta v0.0.10]
-###New Feauture
+### New Feauture
 - Added status bar support. The current status of database (ready, no database, no cscope) will be displayed.
-###Bug fixing
+
+### Bug fixing
 - Removed extra / from the beginning of the file path. This would allow file explorer to locate the source file.
 
 ## [Beta v0.0.9]
