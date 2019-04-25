@@ -10,6 +10,8 @@ import CscopeExecutor from './CscopeExecutor';
 import SearchResultProvider, {openSearch} from './SearchResultProvider';
 import OutputInterface from './OutputInterface';
 
+var path = require('path');
+
 let configurations = null;
 const configPath = vscode.workspace.rootPath + '/.vscode/cscope_conf.json';
 
@@ -48,6 +50,16 @@ class VscodeOutput implements OutputInterface {
 
 const out = new VscodeOutput;
 
+function getDatabasePath(database_path_config:string)
+{
+    let expanded_path=database_path_config.replace('${workspaceRoot', vscode.workspace.rootPath);
+    if (!path.isAbsolute(expanded_path))
+    {
+        return vscode.workspace.rootPath + '/' + expanded_path;
+    }
+    return expanded_path;
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -60,8 +72,9 @@ export function activate(context: vscode.ExtensionContext) {
         configurations = JSON.parse(loadConfiguration());
         // Use the console to output diagnostic information (console.log) and errors (console.error)
         // This line of code will only be executed once when your extension is activated
-    
-        const executor = new CscopeExecutor(null, vscode.workspace.rootPath + '/.vscode', out);
+        const database_path = getDatabasePath(configurations.engine_configurations[0].cscope.database_path);
+
+        const executor = new CscopeExecutor(null, database_path, out);
         const searchResult = new SearchResultProvider(executor);
     
         const providerRegistrations = vscode.Disposable.from(
@@ -119,7 +132,8 @@ const defaultConfig =
 '            "cscope" : {\n' + 
 '                "paths" : [\n' + 
 '                    "${workspaceRoot}"\n' + 
-'                ]\n' + 
+'                ],\n' +
+'                "database_path" : "${workspaceRoot}/.vscode/cscope\n' +
 '            }\n' +
 '        }\n' +
 '    ]\n' +
@@ -154,6 +168,16 @@ function loadConfiguration():string
         fs.writeFileSync(configPath, defaultConfig);
         configText = defaultConfig;
     }
+
+    let configuration = JSON.parse(configText);
+    const database_path = getDatabasePath(configuration.engine_configurations[0].cscope.database_path)
+    try{
+        fs.accessSync(database_path, fs.constants.R_OK | fs.constants.W_OK)
+    }
+    catch{
+        out.diagLog("cscope database path does not exist, creating new one");
+        fs.mkdirSync(database_path);
+    }
     return configText;
 }
 
@@ -179,10 +203,11 @@ function buildDataBase()
     let newConfig = reloadConfiguration();
     const sourcePaths = newConfig.engine_configurations[0].cscope.paths;
 
+    const database_path = getDatabasePath(newConfig.engine_configurations[0].cscope.database_path);
+
     const execConfig = {
         cwd: vscode.workspace.rootPath,
         env: process.env};
-    let ret = spawnSync("mkdir", ['-p', '.vscode'], execConfig);
 
     let paths = [];
     sourcePaths.forEach((path) => {
@@ -193,7 +218,7 @@ function buildDataBase()
     // start with linux command line since this is easier. Later shall change
     // to node api for file search.5
     // Now we are building the database
-    const executor = new CscopeExecutor(paths, vscode.workspace.rootPath + '/.vscode', out);
+    const executor = new CscopeExecutor(paths, database_path , out);
 
     if (executor.checkTool()) {
         executor.buildDataBase();
