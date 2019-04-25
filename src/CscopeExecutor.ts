@@ -44,21 +44,23 @@ function cmdRunner(cmd, args, option):Promise<any> {
 
 export default class CscopeExecutor {
     source_paths:string[];
-    exec_path:string;
+    database_path:string;
+    build_command:string;
     outInf:OutputInterface;
     executorBusy:boolean;
 
-    constructor(source_paths:string[], exec_path:string, out:OutputInterface)
+    constructor(source_paths:string[], database_path:string, build_command:string, out:OutputInterface)
     {
         this.source_paths = source_paths;
-        this.exec_path = exec_path;
+        this.database_path = database_path;
+        this.build_command = build_command;
         this.outInf = out;
         this.executorBusy = false;
     }
 
     private databaseReady():boolean {
         try {
-            fs.accessSync(this.exec_path + '/cscope/cscope.out', fs.constants.R_OK | fs.constants.W_OK);
+            fs.accessSync(this.database_path + '/cscope.out', fs.constants.R_OK | fs.constants.W_OK);
             return true;
         }
         catch (err)
@@ -70,7 +72,7 @@ export default class CscopeExecutor {
 
     private async checkToolSync():Promise<boolean> {
         const cscopeExecConfig = {
-            cwd: this.exec_path,
+            cwd: this.database_path,
             env: process.env};
 
         let result = await cmdRunner("cscope", ['-V'], cscopeExecConfig);
@@ -99,7 +101,7 @@ export default class CscopeExecutor {
 
     public checkTool():boolean{
         const cscopeExecConfig = {
-            cwd: this.exec_path,
+            cwd: this.database_path,
             env: process.env};
 
         const ret = spawnSync("cscope", ['-V'], cscopeExecConfig);
@@ -143,42 +145,63 @@ export default class CscopeExecutor {
         return true;
     }
 
+    private internal_buildDataBase() : any
+    {
+        let start = true;
+        this.source_paths.forEach((path) => {
+            const execConfig = {
+                cwd: this.database_path,
+                env: process.env};
+    
+            let ret = spawnSync("find", [path, '-type', 'f', '-name', '*.c', 
+                            '-o', '-type', 'f', '-name', '*.h', 
+                            '-o', '-type', 'f', '-name', '*.cpp', 
+                            '-o', '-type', 'f', '-name', '*.cc', 
+                            '-o', '-type', 'f', '-name', '*.mm'], execConfig);
+            if (ret.stderr.length > 0) {
+                console.log(ret.stderr.toString());
+            }
+            else {
+                if (start) {
+                    fs.writeFileSync(this.database_path + '/cscope.files', ret.stdout.toString());
+                }
+                else{
+                    fs.appendFileSync(this.database_path + '/cscope.files', ret.stdout.toString());
+                }
+                start = false;
+            }
+        });
+    
+        const cscopeExecConfig = {
+            cwd: this.database_path,
+            env: process.env};
+        const ret = spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
+
+        return ret;
+    }
+
     public buildDataBase():boolean{
 
         if (!this.executorBusy) {
             this.outInf.updateState("building...");
             this.checkToolSync().then( (value) => {
-                if (value) {
-                    let start = true;
-                    this.source_paths.forEach((path) => {
-                        const execConfig = {
-                            cwd: this.exec_path,
-                            env: process.env};
-                
-                        let ret = spawnSync("mkdir", ['-p', 'cscope'], execConfig);
-                        ret = spawnSync("find", [path, '-type', 'f', '-name', '*.c', 
-                                        '-o', '-type', 'f', '-name', '*.h', 
-                                        '-o', '-type', 'f', '-name', '*.cpp', 
-                                        '-o', '-type', 'f', '-name', '*.cc', 
-                                        '-o', '-type', 'f', '-name', '*.mm'], execConfig);
-                        if (ret.stderr.length > 0) {
-                            console.log(ret.stderr.toString());
-                        }
-                        else {
-                            if (start) {
-                                fs.writeFileSync(this.exec_path + '/cscope/cscope.files', ret.stdout.toString());
-                            }
-                            else{
-                                fs.appendFileSync(this.exec_path + '/cscope/cscope.files', ret.stdout.toString());
-                            }
-                            start = false;
-                        }
-                    });
-                
+                let ret;
+
+                if (this.build_command === "")
+                {
+                    ret = this.internal_buildDataBase();
+                }
+                else
+                {
                     const cscopeExecConfig = {
-                        cwd: this.exec_path + '/cscope',
+                        cwd: this.database_path,
                         env: process.env};
-                    const ret = spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
+                    let args = this.build_command.split(" ");
+                    const cmd = args.shift();
+
+                    ret = spawnSync(cmd, args, cscopeExecConfig);
+                }
+                if (value) {
                     if ((ret.stderr) && (ret.stderr.length > 0)) {
                         this.outInf.errorToUser(ret.stderr.toString());
                     }
@@ -213,7 +236,7 @@ export default class CscopeExecutor {
         if (!this.executorBusy) {
 
             const cscopeExecConfig = {
-            cwd: this.exec_path + '/cscope',
+            cwd: this.database_path,
             env: process.env};
 
             let ret = spawnSync("cscope", ['-q', '-L' + level + targetText], cscopeExecConfig);
