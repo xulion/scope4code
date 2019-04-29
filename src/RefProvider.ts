@@ -4,6 +4,9 @@ import * as vscode from 'vscode';
 
 import CscopeExecutor from './CscopeExecutor';
 import SymbolLocation from './SymbolLocation';
+import { PassThrough } from 'stream';
+
+var path = require('path');
 
 export class RefProvider implements vscode.ReferenceProvider {
 
@@ -25,6 +28,8 @@ export class RefProvider implements vscode.ReferenceProvider {
                 let list = [];
                 fileList.forEach((line) =>{
                     let fileName = line.fileName;
+                    if (!path.isAbsolute(fileName))
+                        fileName = vscode.workspace.rootPath + '/' + fileName;
 //                    console.log(fileName);
                     const lineNum = line.lineNum - 1;
                     let start_pos = new vscode.Position(lineNum, line.colStart);
