@@ -1,3 +1,10 @@
+## [Beta v0.0.13]
+### New Feauture
+- None
+
+### Bug fixing
+- Fix compatibility issue. v0.0.12 is not compatible with old configure file.  
+
 ## [Beta v0.0.12]
 ### New Feauture
 - Added support for placing database anywhere. Thanks to [Yves](https://github.com/ydeweerdt) for making this happen!
