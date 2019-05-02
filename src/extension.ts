@@ -60,6 +60,16 @@ function getDatabasePath(database_path_config:string)
     return expanded_path;
 }
 
+function getCompileCommandsJson(compile_commands_json_path:string) : string
+{
+    let expanded_path = compile_commands_json_path.replace('${workspaceRoot}', vscode.workspace.rootPath);
+    if (!path.isAbsolute(expanded_path))
+    {
+        return path.join(vscode.workspace.rootPath, expanded_path);
+    }
+    return expanded_path;
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -75,8 +85,9 @@ export function activate(context: vscode.ExtensionContext) {
         // This line of code will only be executed once when your extension is activated
         const database_path = getDatabasePath(configurations.engine_configurations[0].cscope.database_path);
         const build_command = configurations.engine_configurations[0].cscope.build_command;
+        const compile_commands_json_path = getCompileCommandsJson(configurations.engine_configurations[0].cscope.compile_commands_json);
 
-        const executor = new CscopeExecutor(null, database_path, build_command, out);
+        const executor = new CscopeExecutor(null, database_path, build_command, compile_commands_json_path, out);
         const searchResult = new SearchResultProvider(executor);
     
         const providerRegistrations = vscode.Disposable.from(
@@ -136,7 +147,8 @@ const defaultConfig =
 '                    "${workspaceRoot}"\n' + 
 '                ],\n' +
 '                "build_command" : "",\n' +
-'                "database_path" : "${workspaceRoot}/.vscode/cscope"\n' +
+'                "database_path" : "${workspaceRoot}/.vscode/cscope",\n' +
+'                "compile_commands_json" : "",\n' +
 '            }\n' +
 '        }\n' +
 '    ]\n' +
@@ -150,6 +162,10 @@ function validateConfiguration(configuration:any) {
 
     if (!configuration.engine_configurations[0].cscope.build_command) {
         configuration.engine_configurations[0].cscope.build_command = "";
+    }
+
+    if (!configuration.engine_configurations[0].cscope.compile_commands_json) {
+        configuration.engine_configurations[0].cscope.compile_commands_json = "";
     }
 }
 
@@ -230,6 +246,7 @@ function buildDataBase()
 
     const database_path = getDatabasePath(newConfig.engine_configurations[0].cscope.database_path);
     const build_command = newConfig.engine_configurations[0].cscope.build_command;
+    const compile_commands_json_path = getCompileCommandsJson(newConfig.engine_configurations[0].cscope.compile_commands_json);
 
     let paths = [];
     sourcePaths.forEach((path) => {
@@ -241,7 +258,7 @@ function buildDataBase()
     // to node api for file search.5
     // Now we are building the database
 
-    const executor = new CscopeExecutor(paths, database_path, build_command, out);
+    const executor = new CscopeExecutor(paths, database_path, build_command, compile_commands_json_path, out);
 
     if (executor.checkTool()) {
         executor.buildDataBase();
