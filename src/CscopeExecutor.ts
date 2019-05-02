@@ -16,6 +16,8 @@ cscope find command:
 const spawnSync = require('child_process').spawnSync;
 const spawn = require('child_process').spawn;
 const fs = require('fs');
+const glob = require('glob');
+
 import SymbolLocation from './SymbolLocation';
 import OutputInterface from './OutputInterface';
 
@@ -46,14 +48,16 @@ export default class CscopeExecutor {
     source_paths:string[];
     database_path:string;
     build_command:string;
+    compile_commands_json_path:string;
     outInf:OutputInterface;
     executorBusy:boolean;
 
-    constructor(source_paths:string[], database_path:string, build_command:string, out:OutputInterface)
+    constructor(source_paths:string[], database_path:string, build_command:string, compile_commands_json_path: string, out:OutputInterface)
     {
         this.source_paths = source_paths;
         this.database_path = database_path;
         this.build_command = build_command;
+        this.compile_commands_json_path = compile_commands_json_path;
         this.outInf = out;
         this.executorBusy = false;
     }
@@ -145,7 +149,7 @@ export default class CscopeExecutor {
         return true;
     }
 
-    private internal_buildDataBase() : any
+    private buildCscopeFilesWithFind()
     {
         let start = true;
         this.source_paths.forEach((path) => {
@@ -160,6 +164,7 @@ export default class CscopeExecutor {
                             '-o', '-type', 'f', '-name', '*.mm'], execConfig);
             if (ret.stderr.length > 0) {
                 console.log(ret.stderr.toString());
+                return ret;
             }
             else {
                 if (start) {
@@ -171,13 +176,82 @@ export default class CscopeExecutor {
                 start = false;
             }
         });
-    
+        return {};
+    }
+
+    private buildCscopeFilesFromCompileCommandsJson(compile_commands_json_path:string)
+    {
+        let compileCommandsText;
+        let compileCommands;
+
+        try
+        {
+            compileCommandsText = fs.readFileSync(compile_commands_json_path);
+        } catch(err) {
+            return { 'stderr' : 'unable to open ' + compile_commands_json_path };
+        }
+        try
+        {
+            compileCommands = JSON.parse(compileCommandsText);
+        }
+        catch(err)
+        {
+            return { 'stderr': 'unable to parse ' + compile_commands_json_path };
+        }
+        const reInclude = /-I([^\s]*)/g;
+
+        const cscopeFiles = this.database_path + '/cscope.files';
+        let includeDirs = {};
+
+        fs.writeFileSync(cscopeFiles, '');
+
+        compileCommands.forEach((cu) => {
+            fs.appendFileSync(cscopeFiles, cu.file + '\n');
+
+            let match;
+            while (match = reInclude.exec(cu.command))
+            {
+                includeDirs[match[1]] = 1;
+            }
+        });
+
+        let includeFiles = {};
+
+        for (var dir in includeDirs)
+        {
+            let files = glob.sync("**/*.{h,hpp}", {cwd : dir, realpath: true});
+            files.forEach((file) =>
+            {
+                includeFiles[file] = 1;
+            });
+        }
+
+        for (var file in includeFiles)
+        {
+            fs.appendFileSync(cscopeFiles, file + '\n');
+        }
+    }
+
+    private internal_buildDataBase() : any
+    {
+        let ret;
+
+        if (this.compile_commands_json_path !== "")
+        {
+            ret = this.buildCscopeFilesFromCompileCommandsJson(this.compile_commands_json_path);
+        }
+        else
+        {
+            ret = this.buildCscopeFilesWithFind();
+        }
+        if ((ret.stderr) && (ret.stderr.length > 0))
+            return ret;
+
         const cscopeExecConfig = {
             cwd: this.database_path,
             env: process.env};
-        const ret = spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
+        return spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
 
-        return ret;
     }
 
     public buildDataBase():boolean{
@@ -204,9 +278,11 @@ export default class CscopeExecutor {
                 if (value) {
                     if ((ret.stderr) && (ret.stderr.length > 0)) {
                         this.outInf.errorToUser(ret.stderr.toString());
+                        this.outInf.updateState("failed");
                     }
                     else if (ret.stdout.toString().search("fail") === 0) {
                         this.outInf.errorToUser(ret.stdout.toString());
+                        this.outInf.updateState("failed");
                     }
                     else {
                         this.outInf.notifyUser("database build finished.");
