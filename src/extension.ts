@@ -70,6 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(status);
             
         configurations = JSON.parse(loadConfiguration());
+        validateConfiguration(configurations);
         // Use the console to output diagnostic information (console.log) and errors (console.error)
         // This line of code will only be executed once when your extension is activated
         const database_path = getDatabasePath(configurations.engine_configurations[0].cscope.database_path);
@@ -126,7 +127,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 const defaultConfig = 
 '{\n' +
-'    "version": "0.0.5",\n' +
+'    "version": "0.0.13",\n' +
 '    "open_new_column" : "no",\n' +
 '    "engine_configurations": [\n' +
 '        {\n' + 
@@ -140,6 +141,17 @@ const defaultConfig =
 '        }\n' +
 '    ]\n' +
 '}';
+
+
+function validateConfiguration(configuration:any) {
+    if (!configuration.engine_configurations[0].cscope.database_path) {
+        configuration.engine_configurations[0].cscope.database_path = "${workspaceRoot}/.vscode/cscope";
+    }
+
+    if (!configuration.engine_configurations[0].cscope.build_command) {
+        configuration.engine_configurations[0].cscope.build_command = "";
+    }
+}
 
 function loadConfiguration():string
 {
@@ -172,6 +184,8 @@ function loadConfiguration():string
     }
 
     let configuration = JSON.parse(configText);
+
+    validateConfiguration(configuration);
     const database_path = getDatabasePath(configuration.engine_configurations[0].cscope.database_path)
     try{
         fs.accessSync(database_path, fs.constants.R_OK | fs.constants.W_OK)
@@ -191,6 +205,7 @@ function reloadConfiguration():any
 
     try {
         ret = JSON.parse(fs.readFileSync(configPath).toString());
+        validateConfiguration(ret);
         const database_path = getDatabasePath(ret.engine_configurations[0].cscope.database_path)
         try{
             fs.accessSync(database_path, fs.constants.R_OK | fs.constants.W_OK)
