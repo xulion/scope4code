@@ -1,11 +1,15 @@
-import {run_command} from '../run_command';
+'use strict';
 const child_process = require('child_process');
+const os = require('os');
 
 jest.mock("child_process");
+jest.mock("os");
 
 let child_instance = null;
 
-describe('listFilesInDirectorySync', () => {
+describe('run command tests', () => {
+    const utilities = require('../utilities');
+
     beforeEach(() => {
         child_instance = {
             stdout : {
@@ -60,7 +64,7 @@ describe('listFilesInDirectorySync', () => {
     test('failed to run a command', async () => {
 
         init_spawn_mock(false, null, null, 0);
-        let result = await run_command("adb");
+        let result = await utilities.run_command("adb");
 
         expect(child_process.spawn).toBeCalledWith("adb", undefined, undefined);
         expect(child_instance.stdout.on).toBeCalledTimes(0);
@@ -72,7 +76,7 @@ describe('listFilesInDirectorySync', () => {
 
         init_spawn_mock(true, ["1231323", "abababab"], null, 0);
 
-        const result = await run_command("adb");
+        const result = await utilities.run_command("adb");
 
         expect(child_process.spawn).toBeCalledWith("adb", undefined, undefined);
         expect(child_instance.stdout.on).toBeCalledWith("data", expect.anything());
@@ -85,7 +89,7 @@ describe('listFilesInDirectorySync', () => {
 
     test('run a single command with one arg', async () => {
         init_spawn_mock(true, ["success"], null, 0);
-        const result = await run_command("1234", ["arg1"]);
+        const result = await utilities.run_command("1234", ["arg1"]);
         expect(child_process.spawn).toBeCalledWith("1234", ["arg1"], undefined);
         expect(child_instance.stdout.on).toBeCalledWith("data", expect.anything());
         expect(child_instance.stderr.on).toBeCalledWith("data", expect.anything());
@@ -97,7 +101,7 @@ describe('listFilesInDirectorySync', () => {
 
     test('run a single command with more args', async () => {
         init_spawn_mock(true, ["success with more args"], null, 0);
-        const result = await run_command("1234", ["arg1", "arg2", "arg3"]);
+        const result = await utilities.run_command("1234", ["arg1", "arg2", "arg3"]);
         expect(child_process.spawn).toBeCalledWith("1234", ["arg1", "arg2", "arg3"], undefined);
         expect(child_instance.stdout.on).toBeCalledWith("data", expect.anything());
         expect(child_instance.stderr.on).toBeCalledWith("data", expect.anything());
@@ -110,7 +114,7 @@ describe('listFilesInDirectorySync', () => {
     test('run a single command with option', async () => {
         init_spawn_mock(true, null, ["error", " code 11"], 0);
 
-        const result = await run_command("1234", ["arg1"], {cwd:"1234"});
+        const result = await utilities.run_command("1234", ["arg1"], {cwd:"1234"});
         expect(child_process.spawn).toBeCalledWith("1234", ["arg1"], {cwd:"1234"});
         expect(child_instance.stdout.on).toBeCalledWith("data", expect.anything());
         expect(child_instance.stderr.on).toBeCalledWith("data", expect.anything());
@@ -123,7 +127,7 @@ describe('listFilesInDirectorySync', () => {
     test('run a single command with option has multiple fields and failed', async () => {
         init_spawn_mock(true, null, ["error", " code 5"], 5);
         
-        const result = await run_command("1234", ["arg1"], {cwd:"1234", env:"ABC"});
+        const result = await utilities.run_command("1234", ["arg1"], {cwd:"1234", env:"ABC"});
         expect(child_process.spawn).toBeCalledWith("1234", ["arg1"], {env:"ABC", cwd:"1234"});
         expect(child_instance.stdout.on).toBeCalledWith("data", expect.anything());
         expect(child_instance.stderr.on).toBeCalledWith("data", expect.anything());
@@ -131,5 +135,49 @@ describe('listFilesInDirectorySync', () => {
         expect(result.stderr).toBe("error code 5");
         expect(result.success).toBe(true);
         expect(result.code).toBe(5);
+    });
+});
+
+describe('current os test', () => {
+    const utilities = require('../utilities');
+
+    function test_current_os (os_string : string, os_type : number) {
+        os.platform.mockReturnValueOnce(os_string);
+
+        const returned_os_type = utilities.current_os();
+        expect(returned_os_type).toBe(os_type);
+        expect(os.platform).toBeCalledTimes(1);
+    }
+    
+    test('return unkown for aix', () => {
+        test_current_os("aix", utilities.constants.OS_UNKOWN);
+    });
+
+    test('return unkown for freebsd', () => {
+        test_current_os("freebsd", utilities.constants.OS_UNKOWN);
+    });
+
+    test('return unkown for openbsd', () => {
+        test_current_os("openbsd", utilities.constants.OS_UNKOWN);
+    });
+
+    test('return unkown for sunos', () => {
+        test_current_os("sunos", utilities.constants.OS_UNKOWN);
+    });
+
+    test('return unkown for android', () => {
+        test_current_os("android", utilities.constants.OS_UNKOWN);
+    });
+
+    test('return linux for linux', () => {
+        test_current_os("linux", utilities.constants.OS_LINUX);
+    });
+
+    test('return windows for win32', () => {
+        test_current_os("win32", utilities.constants.OS_WINDOWS);
+    });
+
+    test('return Mac for darwin', () => {
+        test_current_os("darwin", utilities.constants.OS_MAC_OS);
     });
 });
