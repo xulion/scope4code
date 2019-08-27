@@ -16,31 +16,10 @@ cscope find command:
 const spawnSync = require('child_process').spawnSync;
 const spawn = require('child_process').spawn;
 const fs = require('fs');
+const path = require('path');
 import SymbolLocation from './SymbolLocation';
 import OutputInterface from './OutputInterface';
-
-function cmdRunner(cmd, args, option):Promise<any> {
-    return new Promise((resolve, reject) => {
-        const ret = spawn(cmd, args, option);
-        let result = {
-            stdout:[],
-            stderr:[]
-        };
-
-        ret.stdout.on('data', (data) => {
-            result.stdout += data;
-        });
-
-        ret.stderr.on('data', (data) => {
-            result.stderr = data;
-            console.log(data.toString())
-        });
-
-        ret.on('close', (code) => {
-            resolve(result);
-        });
-    });
-}
+import {run_command} from './run_command';
 
 export default class CscopeExecutor {
     source_paths:string[];
@@ -60,7 +39,7 @@ export default class CscopeExecutor {
 
     private databaseReady():boolean {
         try {
-            fs.accessSync(this.database_path + '/cscope.out', fs.constants.R_OK | fs.constants.W_OK);
+            fs.accessSync(path.join(this.database_path, '/cscope.out'), fs.constants.R_OK | fs.constants.W_OK);
             return true;
         }
         catch (err)
@@ -75,7 +54,7 @@ export default class CscopeExecutor {
             cwd: this.database_path,
             env: process.env};
 
-        let result = await cmdRunner("cscope", ['-V'], cscopeExecConfig);
+        let result = await run_command("cscope", ['-V'], cscopeExecConfig);
 
         let toolAvailable = false;
         if ((result.stdout) && (result.stdout.length > 0))
@@ -148,12 +127,12 @@ export default class CscopeExecutor {
     private internal_buildDataBase() : any
     {
         let start = true;
-        this.source_paths.forEach((path) => {
+        this.source_paths.forEach((code_path) => {
             const execConfig = {
                 cwd: this.database_path,
                 env: process.env};
     
-            let ret = spawnSync("find", [path, '-type', 'f', '-name', '*.c', 
+            let ret = spawnSync("find", [code_path, '-type', 'f', '-name', '*.c', 
                             '-o', '-type', 'f', '-name', '*.h', 
                             '-o', '-type', 'f', '-name', '*.cpp', 
                             '-o', '-type', 'f', '-name', '*.cc', 
@@ -163,10 +142,10 @@ export default class CscopeExecutor {
             }
             else {
                 if (start) {
-                    fs.writeFileSync(this.database_path + '/cscope.files', ret.stdout.toString());
+                    fs.writeFileSync(path.join(this.database_path, '/cscope.files'), ret.stdout.toString());
                 }
                 else{
-                    fs.appendFileSync(this.database_path + '/cscope.files', ret.stdout.toString());
+                    fs.appendFileSync(path.join(this.database_path, '/cscope.files'), ret.stdout.toString());
                 }
                 start = false;
             }

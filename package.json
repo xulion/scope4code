@@ -1,75 +1,80 @@
 {
-    "name": "codescope",
-    "displayName": "scope4code",
-    "description": "cscope for vs code",
-    "version": "0.0.13",
-    "publisher": "xulion",
-    "engines": {
-        "vscode": "^1.17.0"
-    },
-    "license": "SEE LICENSE IN LICENSE",
-    "bugs": {
-        "url": "https://github.com/xulion/scope4code/issues",
-        "email": "xulion.xulion@gmail.com"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/xulion/scope4code"
-    },
-    "homepage": "https://github.com/xulion/scope4code/blob/master/README.md",
-    "categories": [
-        "Languages",
-        "Other"
+  "name": "codescope",
+  "displayName": "scope4code",
+  "description": "cscope for vs code",
+  "version": "0.0.13",
+  "publisher": "xulion",
+  "engines": {
+    "vscode": "^1.17.0"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/xulion/scope4code/issues",
+    "email": "xulion.xulion@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xulion/scope4code"
+  },
+  "homepage": "https://github.com/xulion/scope4code/blob/master/README.md",
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "*",
+    "workspaceContains:**/.vscode"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.build",
+        "title": "Cscope: Build database"
+      },
+      {
+        "command": "extension.findSymbol",
+        "title": "Cscope: Find this C symbol"
+      },
+      {
+        "command": "extension.findDefinition",
+        "title": "Cscope: Find this function definition"
+      },
+      {
+        "command": "extension.findCallee",
+        "title": "Cscope: Find functions called by this function"
+      },
+      {
+        "command": "extension.findCaller",
+        "title": "Cscope: Find functions calling this function"
+      },
+      {
+        "command": "extension.findText",
+        "title": "Cscope: Find this text string"
+      },
+      {
+        "command": "extension.findInclude",
+        "title": "Cscope: Find files #including this file"
+      }
     ],
-    "activationEvents": [
-        "*",
-        "workspaceContains:**/.vscode"
-    ],
-    "main": "./out/extension",
-    "contributes": {
-        "commands": [
-            {
-                "command": "extension.build",
-                "title": "Cscope: Build database"
-            },
-            {
-                "command": "extension.findSymbol",
-                "title": "Cscope: Find this C symbol"
-            },
-            {
-                "command": "extension.findDefinition",
-                "title": "Cscope: Find this function definition"
-            },
-            {
-                "command": "extension.findCallee",
-                "title": "Cscope: Find functions called by this function"
-            },
-            {
-                "command": "extension.findCaller",
-                "title": "Cscope: Find functions calling this function"
-            },
-            {
-                "command": "extension.findText",
-                "title": "Cscope: Find this text string"
-            },
-            {
-                "command": "extension.findInclude",
-                "title": "Cscope: Find files #including this file"
-            }
-        ],
-        "menus": {
-            "editor/context": []
-        }
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    },
-    "devDependencies": {
-        "@types/node": "^7.10.6",
-        "typescript": "^2.5.3",
-        "vscode": "^1.1.33"
+    "menus": {
+      "editor/context": []
     }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.18",
+    "@types/node": "^7.10.7",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^2.5.3",
+    "vscode": "^1.1.36"
+  },
+  "dependencies": {}
 }
