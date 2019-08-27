@@ -13,7 +13,7 @@ import OutputInterface from './OutputInterface';
 var path = require('path');
 
 let configurations = null;
-const configPath = vscode.workspace.rootPath + '/.vscode/cscope_conf.json';
+const configPath = path.join(vscode.workspace.rootPath, '/.vscode/cscope_conf.json');
 
 let status = null;
 
@@ -55,7 +55,7 @@ function getDatabasePath(database_path_config:string)
     let expanded_path=database_path_config.replace('${workspaceRoot}', vscode.workspace.rootPath);
     if (!path.isAbsolute(expanded_path))
     {
-        return vscode.workspace.rootPath + '/' + expanded_path;
+        return path.join(vscode.workspace.rootPath, '/', expanded_path);
     }
     return expanded_path;
 }
@@ -155,7 +155,7 @@ function validateConfiguration(configuration:any) {
 
 function loadConfiguration():string
 {
-    const vscodePath = vscode.workspace.rootPath + '/.vscode';
+    const vscodePath = path.join(vscode.workspace.rootPath, '/.vscode');
 
     try{
         fs.accessSync(vscodePath, fs.constants.R_OK | fs.constants.W_OK);
