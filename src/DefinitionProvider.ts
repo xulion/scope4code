@@ -24,9 +24,9 @@ export class DefinitionProvider implements vscode.DefinitionProvider {
 
         const symbol = document.getText(document.getWordRangeAtPosition(position));
         
-        return new Promise<vscode.Location[]>((resolve, reject) => {
+        return new Promise<vscode.Location[]>(async (resolve, reject) => {
                     
-            const fileList = this.executor.findDefinition(symbol);
+            const fileList = await this.executor.findDefinition(symbol);
             let list = [];
             fileList.forEach((line) =>{
                 let fileName = line.fileName;

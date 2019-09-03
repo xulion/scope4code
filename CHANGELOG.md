@@ -1,3 +1,10 @@
+## [Beta v0.0.15]
+### New Feauture
+- Support to disable cscope for a workspace.
+- Support adding path for cscope executable. 
+
+### Bug fixing
+
 ## [Beta v0.0.14]
 ### New Feauture
 - Added windows support.

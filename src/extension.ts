@@ -9,13 +9,16 @@ import {DefinitionProvider} from './DefinitionProvider';
 import CscopeExecutor from './CscopeExecutor';
 import SearchResultProvider, {openSearch} from './SearchResultProvider';
 import OutputInterface from './OutputInterface';
-
+import ExtensionConfig from "./ext_config/ExtensionConfig";
 var path = require('path');
 
-let configurations = null;
-const configPath = path.join(vscode.workspace.rootPath, '/.vscode/cscope_conf.json');
+function get_config_path() : string {
+    return path.join(vscode.workspace.rootPath, '/.vscode/cscope_conf.json');
+};
 
 let status = null;
+let ext_config : ExtensionConfig = null;
+let executor : CscopeExecutor = null;
 
 function updateStatus(text) {
     if (status) {
@@ -48,42 +51,62 @@ class VscodeOutput implements OutputInterface {
 
 };
 
-const out = new VscodeOutput;
-
-function getDatabasePath(database_path_config:string)
-{
-    let expanded_path=database_path_config.replace('${workspaceRoot}', vscode.workspace.rootPath);
-    if (!path.isAbsolute(expanded_path))
-    {
-        return path.join(vscode.workspace.rootPath, '/', expanded_path);
-    }
-    return expanded_path;
-}
+const out : VscodeOutput = new VscodeOutput;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+
     //start initializing environment only after a workspace folder is opened
-    if (vscode.workspace.rootPath)
-    {
+    let enableScope = false;
+
+    if (vscode.workspace.rootPath) {
+        const myconfig = vscode.workspace.getConfiguration('scope4code');
+        ext_config = new ExtensionConfig(myconfig, get_config_path(), vscode.workspace.rootPath);
+        enableScope = ext_config.enabled();
+    }
+
+    if (enableScope) {
         status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         context.subscriptions.push(status);
+        
+        ext_config.validateConfig();
             
-        configurations = JSON.parse(loadConfiguration());
-        validateConfiguration(configurations);
+//        configurations = JSON.parse(loadConfiguration());
+//        validateConfiguration(configurations);
         // Use the console to output diagnostic information (console.log) and errors (console.error)
         // This line of code will only be executed once when your extension is activated
-        const database_path = getDatabasePath(configurations.engine_configurations[0].cscope.database_path);
-        const build_command = configurations.engine_configurations[0].cscope.build_command;
+//        const database_path = getDatabasePath(configurations.engine_configurations[0].cscope.database_path);
+//        const build_command = configurations.engine_configurations[0].cscope.build_command;
+        const database_path = ext_config.getDatabasePath();
+        const build_command = ext_config.getBuildCmd();
+        process.env.PATH = ext_config.getExePath() + ":" + process.env.PATH;
+        console.log(process.env.PATH);
 
-        const executor = new CscopeExecutor(null, database_path, build_command, out);
+        try{
+            fs.accessSync(path.join(vscode.workspace.rootPath, ".vscode"), fs.constants.R_OK | fs.constants.W_OK)
+        }
+        catch{
+            out.diagLog(".vscode folder does not exist, creating new one");
+            fs.mkdirSync(path.join(vscode.workspace.rootPath, ".vscode"));
+        }
+
+        try{
+            fs.accessSync(database_path, fs.constants.R_OK | fs.constants.W_OK)
+        }
+        catch{
+            out.diagLog("cscope database folder does not exist, creating new one");
+            fs.mkdirSync(database_path);
+        }
+    
+        executor = new CscopeExecutor(ext_config, out);
         const searchResult = new SearchResultProvider(executor);
     
         const providerRegistrations = vscode.Disposable.from(
             vscode.workspace.registerTextDocumentContentProvider(SearchResultProvider.scheme, searchResult),
             vscode.languages.registerDocumentLinkProvider({ scheme: SearchResultProvider.scheme }, searchResult)
         );
-        
+
         // The command has been defined in the package.json file
         // Now provide the implementation of the command with  registerCommand
         // The commandId parameter must match the command field in package.json
@@ -125,24 +148,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
 }
 
-const defaultConfig = 
-'{\n' +
-'    "version": "0.0.13",\n' +
-'    "open_new_column" : "no",\n' +
-'    "engine_configurations": [\n' +
-'        {\n' + 
-'            "cscope" : {\n' + 
-'                "paths" : [\n' + 
-'                    "${workspaceRoot}"\n' + 
-'                ],\n' +
-'                "build_command" : "",\n' +
-'                "database_path" : "${workspaceRoot}/.vscode/cscope"\n' +
-'            }\n' +
-'        }\n' +
-'    ]\n' +
-'}';
-
-
 function validateConfiguration(configuration:any) {
     if (!configuration.engine_configurations[0].cscope.database_path) {
         configuration.engine_configurations[0].cscope.database_path = "${workspaceRoot}/.vscode/cscope";
@@ -153,83 +158,13 @@ function validateConfiguration(configuration:any) {
     }
 }
 
-function loadConfiguration():string
+async function buildDataBase()
 {
-    const vscodePath = path.join(vscode.workspace.rootPath, '/.vscode');
+    ext_config.validateConfig();
+    const sourcePaths = ext_config.getSourcePaths();
 
-    try{
-        fs.accessSync(vscodePath, fs.constants.R_OK | fs.constants.W_OK);
-    }
-    catch{
-        out.diagLog(".vscode folder does not exist, creating new one");
-        fs.mkdirSync(vscodePath);
-    }
-    
-    try{
-        fs.accessSync(configPath, fs.constants.R_OK);
-    }
-    catch{
-        out.diagLog("cscope_conf.json does not exist, creating new one");
-        fs.writeFileSync(configPath, defaultConfig);
-    }
-
-    let configText = fs.readFileSync(configPath).toString();
-    try {
-        JSON.parse(configText);
-    }
-    catch{
-        out.diagLog("cscope_conf.json is invalid, creating new one");
-        fs.writeFileSync(configPath, defaultConfig);
-        configText = defaultConfig;
-    }
-
-    let configuration = JSON.parse(configText);
-
-    validateConfiguration(configuration);
-    const database_path = getDatabasePath(configuration.engine_configurations[0].cscope.database_path)
-    try{
-        fs.accessSync(database_path, fs.constants.R_OK | fs.constants.W_OK)
-    }
-    catch{
-        out.diagLog("cscope database path does not exist, creating new one");
-        fs.mkdirSync(database_path);
-    }
-    return configText;
-}
-
-// Reload and return new configurations if it is valid.
-// If any error occured, return the old one.
-function reloadConfiguration():any
-{
-    let ret = configurations;
-
-    try {
-        ret = JSON.parse(fs.readFileSync(configPath).toString());
-        validateConfiguration(ret);
-        const database_path = getDatabasePath(ret.engine_configurations[0].cscope.database_path)
-        try{
-            fs.accessSync(database_path, fs.constants.R_OK | fs.constants.W_OK)
-        }
-        catch{
-            out.diagLog("cscope database path does not exist, creating new one");
-            fs.mkdirSync(database_path);
-        }
-    }
-    catch {
-        // Creating new one is not a good idea here
-        // because user may not have finished his modification.
-        vscode.window.showErrorMessage('cscope_conf.json is invalid');
-    }
-    return ret;
-}
-
-function buildDataBase()
-{
-    let newConfig = reloadConfiguration();
-    const sourcePaths = newConfig.engine_configurations[0].cscope.paths;
-
-    const database_path = getDatabasePath(newConfig.engine_configurations[0].cscope.database_path);
-    const build_command = newConfig.engine_configurations[0].cscope.build_command;
+    const database_path = ext_config.getDatabasePath();
+    const build_command = ext_config.getBuildCmd();
 
     let paths = [];
     sourcePaths.forEach((path) => {
@@ -237,14 +172,10 @@ function buildDataBase()
         paths.push(fullPath);
     });
 
-    // start with linux command line since this is easier. Later shall change
-    // to node api for file search.5
-    // Now we are building the database
+    const executor = new CscopeExecutor(ext_config, out);
 
-    const executor = new CscopeExecutor(paths, database_path, build_command, out);
-
-    if (executor.checkTool()) {
-        executor.buildDataBase();
+    if (await executor.checkTool()) {
+        await executor.buildDataBase();
     }
     else {
         vscode.window.showInformationMessage('cscope command is not detected, please ensure cscope command is accessible.');
@@ -253,32 +184,32 @@ function buildDataBase()
 
 function findSymbol()
 {
-    openSearch("All references found for symbol:", 0, configurations.open_new_column === "yes");
+    openSearch("All references found for symbol:", 0, ext_config.openInNewCol());
 }
 
 function findDefinition()
 {
-    openSearch("Definitions found for symbol:", 1, configurations.open_new_column === "yes");
+    openSearch("Definitions found for symbol:", 1, ext_config.openInNewCol());
 }
 
 function findCallee()
 {
-    openSearch("All functions called by:", 2, configurations.open_new_column === "yes");
+    openSearch("All functions called by:", 2, ext_config.openInNewCol());
 }
 
 function findCaller()
 {
-    openSearch("All functions who called:", 3, configurations.open_new_column === "yes");
+    openSearch("All functions who called:", 3, ext_config.openInNewCol());
 }
 
 function findText()
 {
-    openSearch("All places occures of text:", 4, configurations.open_new_column === "yes");
+    openSearch("All places occures of text:", 4, ext_config.openInNewCol());
 }
 
 function findInclude()
 {
-    openSearch("All files that includes:", 8, configurations.open_new_column === "yes");
+    openSearch("All files that includes:", 8, ext_config.openInNewCol());
 }
 
 // this method is called when your extension is deactivated

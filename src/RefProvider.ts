@@ -22,9 +22,9 @@ export class RefProvider implements vscode.ReferenceProvider {
         Thenable<vscode.Location[]> {
             const symbol = document.getText(document.getWordRangeAtPosition(position));
 
-            return new Promise<vscode.Location[]>((resolve, reject) => {
+            return new Promise<vscode.Location[]>(async (resolve, reject) => {
 
-                const fileList = this.executor.findReferences(symbol);
+                const fileList = await this.executor.findReferences(symbol);
                 let list = [];
                 fileList.forEach((line) =>{
                     let fileName = line.fileName;
@@ -36,7 +36,7 @@ export class RefProvider implements vscode.ReferenceProvider {
                     let end_pos = new vscode.Position(lineNum, line.colEnd);
                     let loc = new vscode.Location(vscode.Uri.file(fileName), new vscode.Range(start_pos, end_pos));
                     list.push(loc);
-                    });
+                });
 
                 return resolve(list);
         });
