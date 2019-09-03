@@ -8,11 +8,11 @@ export default class FindResultDoc {
     private docContent : string;
     private docUri : string;
 
-    constructor (uri: vscode.Uri, executor:CscopeExecutor){
+    constructor (uri: vscode.Uri, fileList : any){
         const [briefText, symbol, functionIndex] = <[string, string, number]>JSON.parse(uri.query);
         const briefing = `${briefText} "${symbol}":\n`;
         this.docUri = uri.toString();
-        const fileList = executor.execCommand(symbol, functionIndex);
+//        const fileList = executor.runSearch(symbol, functionIndex);
         let content = '';
         let lineNum = 1;
         const workspacePathLen = vscode.workspace.rootPath.length;

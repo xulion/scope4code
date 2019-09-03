@@ -180,4 +180,26 @@ describe('current os test', () => {
     test('return Mac for darwin', () => {
         test_current_os("darwin", utilities.constants.OS_MAC_OS);
     });
+
+    describe('resolve path shall return null if input is undefined', () => {
+        const new_path = utilities.resolve_path(undefined);
+        expect(new_path).toBe(null);
+    });
+
+    describe('resolve path shall return null if input is null', () => {
+        const new_path = utilities.resolve_path(null);
+        expect(new_path).toBe(null);
+    });
+
+    describe('resolve path shall return itself if input has no special path', () => {
+        const new_path = utilities.resolve_path("/abc/ddd/aaa/ccc");
+        expect(new_path).toBe("/abc/ddd/aaa/ccc");
+    });
+
+/*    describe('resolve path shall return itself if input has special path', () => {
+        const new_path = utilities.resolve_path("${workspaceRoot}/abc/ddd/aaa/ccc");
+        expect(new_path).toBe("/abc/ddd/aaa/ccc");
+    });*/
 });
+
+

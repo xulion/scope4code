@@ -15,7 +15,18 @@ export class cmd_result {
     stderr : string;
 };
 
-export const config_predefined_str = {
+export const config_variable_str = {
     SRC_PATH : "${src_path}",
-    DATABASE_PATH : "${database_path}"
+    DATABASE_PATH : "${database_path}",
+    SEARCH_TEXT : "${text}",
+    WORK_SPACE_PATH : "${workspaceRoot}"
 };
+
+export const config_field_str = {
+    SCOPE_ENABLE : "enableScope",
+    EXE_PATH : "executablePath"
+};
+
+export const default_config_values = {
+
+}
