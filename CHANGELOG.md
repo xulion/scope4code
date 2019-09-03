@@ -1,3 +1,10 @@
+## [Beta v0.0.14]
+### New Feauture
+- Added windows support.
+
+### Bug fixing
+
+
 ## [Beta v0.0.13]
 ### New Feauture
 - None

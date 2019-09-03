@@ -2,7 +2,7 @@
   "name": "codescope",
   "displayName": "scope4code",
   "description": "cscope for vs code",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "publisher": "xulion",
   "engines": {
     "vscode": "^1.17.0"

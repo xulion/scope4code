@@ -17,16 +17,18 @@ const spawnSync = require('child_process').spawnSync;
 const spawn = require('child_process').spawn;
 const fs = require('fs');
 const path = require('path');
+const run_command = require("./util/utilities").run_command;
+const ScopeEngine = require("./scope_engine/ScopeEngine");
 import SymbolLocation from './SymbolLocation';
 import OutputInterface from './OutputInterface';
-import {run_command} from './run_command';
 
 export default class CscopeExecutor {
-    source_paths:string[];
-    database_path:string;
-    build_command:string;
-    outInf:OutputInterface;
-    executorBusy:boolean;
+    source_paths : string[];
+    database_path : string;
+    build_command : string;
+    outInf : OutputInterface;
+    executorBusy : boolean;
+    scopeEngine : any;
 
     constructor(source_paths:string[], database_path:string, build_command:string, out:OutputInterface)
     {
@@ -35,6 +37,7 @@ export default class CscopeExecutor {
         this.build_command = build_command;
         this.outInf = out;
         this.executorBusy = false;
+        this.scopeEngine = new ScopeEngine(source_paths, database_path);
     }
 
     private databaseReady():boolean {
@@ -124,84 +127,79 @@ export default class CscopeExecutor {
         return true;
     }
 
-    private internal_buildDataBase() : any
+    private async internal_buildDataBase() : Promise<any>
     {
-        let start = true;
-        this.source_paths.forEach((code_path) => {
-            const execConfig = {
-                cwd: this.database_path,
-                env: process.env};
-    
-            let ret = spawnSync("find", [code_path, '-type', 'f', '-name', '*.c', 
-                            '-o', '-type', 'f', '-name', '*.h', 
-                            '-o', '-type', 'f', '-name', '*.cpp', 
-                            '-o', '-type', 'f', '-name', '*.cc', 
-                            '-o', '-type', 'f', '-name', '*.mm'], execConfig);
-            if (ret.stderr.length > 0) {
-                console.log(ret.stderr.toString());
-            }
-            else {
-                if (start) {
-                    fs.writeFileSync(path.join(this.database_path, '/cscope.files'), ret.stdout.toString());
-                }
-                else{
-                    fs.appendFileSync(path.join(this.database_path, '/cscope.files'), ret.stdout.toString());
-                }
-                start = false;
-            }
-        });
-    
-        const cscopeExecConfig = {
-            cwd: this.database_path,
-            env: process.env};
-        const ret = spawnSync("cscope", ['-b', '-q', '-k'], cscopeExecConfig);
+        let result = await this.scopeEngine.generate_file_list();
+        if (!result) {
+            console.log(this.scopeEngine.get_std_err());
+        }
 
-        return ret;
+        result = await this.scopeEngine.build_database();
+        if (!result) {
+            console.log(this.scopeEngine.get_std_err());
+        }
+    
+        return result;
     }
 
-    public buildDataBase():boolean{
+    public async buildDataBase() : Promise<boolean>{
 
+        let ret  = false;
         if (!this.executorBusy) {
             this.outInf.updateState("building...");
-            this.checkToolSync().then( (value) => {
-                let ret;
+            const value = await this.checkToolSync();
 
-                if (this.build_command === "")
-                {
-                    ret = this.internal_buildDataBase();
+            let err_msg : string = "";
+            let user_msg : string = "";
+
+            if (value) {
+
+                if (this.build_command === "") {
+                    ret = await this.internal_buildDataBase();
+                    if (!ret) {
+                        err_msg = this.scopeEngine.get_std_err();
+                    }
                 }
                 else
-                {
+                {    
                     const cscopeExecConfig = {
                         cwd: this.database_path,
-                        env: process.env};
+                        env: process.env
+                    };
+                    
                     let args = this.build_command.split(" ");
                     const cmd = args.shift();
 
-                    ret = spawnSync(cmd, args, cscopeExecConfig);
-                }
-                if (value) {
-                    if ((ret.stderr) && (ret.stderr.length > 0)) {
-                        this.outInf.errorToUser(ret.stderr.toString());
+                    const build_ret = spawnSync(cmd, args, cscopeExecConfig);
+
+                    if ((build_ret.stderr) && (build_ret.stderr.length > 0)) {
+                        err_msg = build_ret.stderr.toString();
                     }
-                    else if (ret.stdout.toString().search("fail") === 0) {
-                        this.outInf.errorToUser(ret.stdout.toString());
+                    else if (build_ret.stdout.toString().search("fail") === 0) {
+                        err_msg = build_ret.stdout.toString();
                     }
                     else {
-                        this.outInf.notifyUser("database build finished.");
-                        this.outInf.updateState("database ready");    
+                        ret = true;
                     }
                 }
-                else {
-                    this.outInf.updateState("not detected");
-                }
-            })
+            }
+            else {
+                this.outInf.updateState("not detected");
+            }
+
+            if (ret) {
+                this.outInf.updateState("database ready");    
+                this.outInf.notifyUser("database build finished.");
+            }
+            else {
+                this.outInf.errorToUser(err_msg);
+            }
         }
         else {
             this.outInf.notifyUser("busy.");
         }
 
-        return true;
+        return ret;
     }
 
     public execCommand(targetText:string, level:number):SymbolLocation[]{
