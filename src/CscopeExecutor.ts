@@ -18,7 +18,8 @@ const spawn = require('child_process').spawn;
 const fs = require('fs');
 const path = require('path');
 const run_command = require("./util/utilities").run_command;
-const ScopeEngine = require("./scope_engine/ScopeEngine");
+import ScopeEngine from "./scope_engine/ScopeEngine";
+import ExtensionConfig from './ext_config/ExtensionConfig';
 import SymbolLocation from './SymbolLocation';
 import OutputInterface from './OutputInterface';
 
@@ -28,96 +29,73 @@ export default class CscopeExecutor {
     build_command : string;
     outInf : OutputInterface;
     executorBusy : boolean;
-    scopeEngine : any;
+    scopeEngine : ScopeEngine;
+    scopConfig : ExtensionConfig;
 
-    constructor(source_paths:string[], database_path:string, build_command:string, out:OutputInterface)
-    {
-        this.source_paths = source_paths;
-        this.database_path = database_path;
-        this.build_command = build_command;
+    constructor(scope_config : ExtensionConfig, out:OutputInterface) {
+        this.source_paths = scope_config.getSourcePaths();
+        this.database_path = scope_config.getDatabasePath();
+        this.build_command = scope_config.getBuildCmd();
         this.outInf = out;
         this.executorBusy = false;
-        this.scopeEngine = new ScopeEngine(source_paths, database_path);
+        this.scopConfig = scope_config;
+
+//        process.env.PATH += ":" + scope_config.getExePath(); 
+        const exe_option = {
+            cwd : this.database_path,
+            env :process.env
+        }
+
+//        console.log(process.env.PATH);
+
+//        exe_option.env.PATH += ":" + scope_config.getExePath();
+//        console.log(exe_option.env.PATH);
+        this.scopeEngine = new ScopeEngine(this.source_paths, this.database_path);
     }
 
     private databaseReady():boolean {
         try {
-            fs.accessSync(path.join(this.database_path, '/cscope.out'), fs.constants.R_OK | fs.constants.W_OK);
+            fs.accessSync(path.join(this.database_path, 'cscope.out'), fs.constants.R_OK | fs.constants.W_OK);
             return true;
         }
-        catch (err)
-        {
+        catch (err) {
             console.log(err.toString());
             return false;
         }
     }
 
-    private async checkToolSync():Promise<boolean> {
+    public async checkTool():Promise<boolean> {
         const cscopeExecConfig = {
-            cwd: this.database_path,
-            env: process.env};
+            cwd: this.database_path
+        };
 
-        let result = await run_command("cscope", ['-V'], cscopeExecConfig);
+        const result = await this.scopeEngine.checkTool();
 
         let toolAvailable = false;
-        if ((result.stdout) && (result.stdout.length > 0))
-        {
-            if (result.stdout.toString().search("cscope: version.*") === 0)
-            {
+        if (result) {
+            const stdOut = this.scopeEngine.getStdOut();
+            const stdErr = this.scopeEngine.getStdErr();
+            if ((stdOut.length > 0) && (stdOut.search("cscope.*version.*") !== -1)){
                 toolAvailable = true;
-            }                
+            }
+            else if ((stdErr.length > 0) && (stdErr.search("cscope.*version.*") !== -1)){
+                toolAvailable = true;
+            }
+            else {
+                this.outInf.updateState("cscope not detected");
+            }
         }
-        else if ((result.stderr) && (result.stderr.length > 0)){
-            if (result.stderr.toString().search("cscope: version.*") === 0)
-            {
-                toolAvailable = true;
-            }
-            else{
-                this.outInf.updateState("not detected");
-            }
-    
-        } 
-
         return toolAvailable;
     }
 
-    public checkTool():boolean{
-        const cscopeExecConfig = {
-            cwd: this.database_path,
-            env: process.env};
-
-        const ret = spawnSync("cscope", ['-V'], cscopeExecConfig);
-        let toolAvailable = false;
-        if ((ret.stdout) && (ret.stdout.length > 0))
-        {
-            if (ret.stdout.toString().search("cscope: version.*") === 0)
-            {
-                toolAvailable = true;
-            }                
-        }
-        else if ((ret.stderr) && (ret.stderr.length > 0)){
-            if (ret.stderr.toString().search("cscope: version.*") === 0)
-            {
-                toolAvailable = true;
-            }
-            else{
-                this.outInf.updateState("not detected");
-            }
-    
-        } 
-        return toolAvailable;
-    }
-
-    public verifyCscope():boolean {
-        if (!this.checkTool())
-        {
+    public async verifyCscope():Promise<boolean> {
+        if (!await this.checkTool()) {
             this.outInf.updateState("not detected");
             this.outInf.errorToUser("cscope is not installed (or not added to PATH)");                
             return false;
         }
 
-        if (!this.databaseReady())
-        {
+        if (!this.databaseReady()) {
             this.outInf.updateState("no database");
             return false;
         }
@@ -129,14 +107,14 @@ export default class CscopeExecutor {
 
     private async internal_buildDataBase() : Promise<any>
     {
-        let result = await this.scopeEngine.generate_file_list();
+        let result = await this.scopeEngine.generateFileList();
         if (!result) {
-            console.log(this.scopeEngine.get_std_err());
+            this.outInf.notifyUser(this.scopeEngine.getStdErr());
         }
 
-        result = await this.scopeEngine.build_database();
+        result = await this.scopeEngine.buildDatabase();
         if (!result) {
-            console.log(this.scopeEngine.get_std_err());
+            this.outInf.notifyUser(this.scopeEngine.getStdErr());
         }
     
         return result;
@@ -147,17 +125,24 @@ export default class CscopeExecutor {
         let ret  = false;
         if (!this.executorBusy) {
             this.outInf.updateState("building...");
-            const value = await this.checkToolSync();
+            const value = await this.checkTool();
 
             let err_msg : string = "";
             let user_msg : string = "";
 
             if (value) {
 
+                this.scopConfig.validateConfig();
+                this.source_paths = this.scopConfig.getSourcePaths();
+                this.database_path = this.scopConfig.getDatabasePath();
+                this.build_command = this.scopConfig.getBuildCmd();
+
+                this.scopeEngine.updatePaths(this.source_paths, this.database_path);
+
                 if (this.build_command === "") {
                     ret = await this.internal_buildDataBase();
                     if (!ret) {
-                        err_msg = this.scopeEngine.get_std_err();
+                        err_msg = this.scopeEngine.getStdErr();
                     }
                 }
                 else
@@ -202,9 +187,31 @@ export default class CscopeExecutor {
         return ret;
     }
 
-    public execCommand(targetText:string, level:number):SymbolLocation[]{
+    private parseSearchResult(search_result : string) : SymbolLocation[] {
+        let list = [];
+        const fileList = search_result.split('\n');
+        fileList.forEach((line) =>{
+            const contents = line.split(' ');
+            if (contents.length > 3)
+            {
+                let fileName = contents[0];
+                const lineNum = parseInt(contents[2]);
 
-        if (!this.verifyCscope()) {
+                let otherText = contents[1];
+                for (let i = 3; i < contents.length; ++i)
+                {
+                    otherText += ` ${contents[i]}`;
+                }
+
+                list.push(new SymbolLocation(fileName, lineNum, 0, 0, otherText));
+            }
+        });
+        return list;
+    }
+
+    public async runSearch(targetText:string, level:number) : Promise<SymbolLocation[]>{
+
+        if (! await this.verifyCscope()) {
             return null;
         }
 
@@ -213,28 +220,34 @@ export default class CscopeExecutor {
         if (!this.executorBusy) {
 
             const cscopeExecConfig = {
-            cwd: this.database_path,
-            env: process.env};
+                cwd: this.database_path,
+                env: process.env
+            };
 
-            let ret = spawnSync("cscope", ['-q', '-L' + level + targetText], cscopeExecConfig);
-            const fileList = ret.stdout.toString().split('\n');
-            fileList.forEach((line) =>{
-                const contents = line.split(' ');
-                if (contents.length > 3)
-                {
-                    let fileName = contents[0];
-    //                console.log(fileName);
-                    const lineNum = parseInt(contents[2]);
+            switch (level) {
+                case 0:
+                    list = await this.findReferences(targetText);
+                    break;
 
-                    let otherText = contents[1];
-                    for (let i = 3; i < contents.length; ++i)
-                    {
-                        otherText += ` ${contents[i]}`;
-                    }
+                case 1:
+                    list = await this.findDefinition(targetText);
+                    break;
 
-                    list.push(new SymbolLocation(fileName, lineNum, 0, 0, otherText));
-                }
-            });
+                case 2:
+                    list = await this.findCallee(targetText);
+                    break;
+
+                case 3:
+                    list = await this.findCaller(targetText);
+                    break;
+                
+                case 4:
+                    list = await this.findText(targetText);
+                    break;
+
+                default:
+                    break;
+            }
         }
         else {
             this.outInf.notifyUser("busy.");
@@ -243,35 +256,60 @@ export default class CscopeExecutor {
         return list;
     }
 
-    public findReferences(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 0);
+    public async findReferences(symbol : string) : Promise<SymbolLocation[]> {
+        let list = [];
+        if (await this.scopeEngine.searchRef(symbol)) {
+            const search_result = this.scopeEngine.getStdOut();
+            list = this.parseSearchResult(search_result.toString());
+        }
+        return list;
     }
 
-    public findDefinition(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 1);
+    public async findDefinition(symbol:string) : Promise<SymbolLocation[]>{
+        let list = [];
+        if (await this.scopeEngine.searchDefinition(symbol)) {
+            const search_result = this.scopeEngine.getStdOut();
+            list = this.parseSearchResult(search_result.toString());
+        }
+        return list;
     }
 
-    findCallee(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 2);
+    public async findCallee(symbol:string) : Promise<SymbolLocation[]>{
+        let list = [];
+        if (await this.scopeEngine.searchCallee(symbol)) {
+            const search_result = this.scopeEngine.getStdOut();
+            list = this.parseSearchResult(search_result.toString());
+        }
+        return list;
     }
 
-    findCaller(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 3);
+    public async findCaller(symbol:string) : Promise<SymbolLocation[]>{
+        let list = [];
+        if (await this.scopeEngine.searchCaller(symbol)) {
+            const search_result = this.scopeEngine.getStdOut();
+            list = this.parseSearchResult(search_result.toString());
+        }
+        return list;
     }
 
-    findText(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 4);
+    public async findText(symbol:string) : Promise<SymbolLocation[]>{
+        let list = [];
+        if (await this.scopeEngine.searchText(symbol)) {
+            const search_result = this.scopeEngine.getStdOut();
+            list = this.parseSearchResult(search_result.toString());
+        }
+        return list;
     }
 
-    findPattern(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 6);
+    public findPattern(symbol:string):Promise<SymbolLocation[]>{
+        return this.runSearch(symbol, 6);
     }
 
-    findThisFile(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 7);
+    public findThisFile(symbol:string):Promise<SymbolLocation[]>{
+        return this.runSearch(symbol, 7);
     }
 
-    findIncluder(symbol:string):SymbolLocation[]{
-        return this.execCommand(symbol, 8);
+    public findIncluder(symbol:string):Promise<SymbolLocation[]>{
+        return this.runSearch(symbol, 8);
     }
 }

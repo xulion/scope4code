@@ -20,7 +20,7 @@ export default class SearchResultProvider implements
     
     static scheme = "search";
 
-    private getDoc(uri: vscode.Uri) : FindResultDoc{
+    private async getDoc(uri: vscode.Uri) : Promise<FindResultDoc>{
         let resultDoc = null;
 
         for (let i = 0; i < this.docs.length; ++i){
@@ -31,7 +31,9 @@ export default class SearchResultProvider implements
         }
 
         if (!resultDoc){
-            resultDoc = new FindResultDoc(uri, this.executor);
+            const [briefText, symbol, functionIndex] = <[string, string, number]>JSON.parse(uri.query);
+            const fileList = await this.executor.runSearch(symbol, functionIndex);
+            resultDoc = new FindResultDoc(uri, fileList);
             this.docs.push(resultDoc);
         }
         
@@ -40,18 +42,24 @@ export default class SearchResultProvider implements
 
     provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string>{
 
-        const resultDoc = this.getDoc(uri);
-        return resultDoc.getDocContent();
+        return new Promise( (resolve, reject) => {
+            this.getDoc(uri).then((resultDoc)=>{
+                resolve(resultDoc.getDocContent());
+            });
+        });
     }
 
     provideDocumentLinks(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.DocumentLink[]>{
-        const resultDoc = this.getDoc(document.uri);
-        return resultDoc.getDocLinks();
+        return new Promise( (resolve, reject) => {
+            this.getDoc(document.uri).then((resultDoc)=>{
+                resolve(resultDoc.getDocLinks());
+            });
+        });
     }
     
 }
 
-export function openSearch(brief:string, functionIndex:number, columnMode : boolean){
+export function openSearch(brief:string, functionIndex:number, columnMode : boolean) {
     if (vscode.window){
         if (vscode.window.activeTextEditor){
 
