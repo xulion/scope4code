@@ -10,8 +10,12 @@ Visual Studio Code C/C++ extension already supported tag parsing and symbol sear
 
 ## Usage
 * Dependency:
-    * In order to use this extension, cscope has to be installed and shall be accessible via command line. The extension is designed to call 'cscope' command line to get everything done. 
+    * In order to use this extension, cscope has to be installed and shall be accessible via command line. The extension is designed to call 'cscope' command line to get everything done. If for some reason cscope is not able to be called from a default shell, a path could be added to following setting (replace <cscope_path> with full path):
+    ```
+    "scope4code.executablePath": "<cscope_path>"
+    ```
     **For windows user:** pls download cscope from [here](https://code.google.com/archive/p/cscope-win32/downloads). Extract the exe after download and add path to user or system evironment.
+    **For Linux user:** Do not use ~/ in <cscope_path>. It has to be the full absolute path.
 * Build database:
     * Press F1 or Ctrl+Shift+P to open command window, select "Cscope: Build database" to start building.
 * Find all references
