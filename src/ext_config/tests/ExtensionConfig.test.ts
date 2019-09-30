@@ -17,9 +17,11 @@ describe('ExtensionConfig tests', () => {
         jest.resetAllMocks();
     });
 
-    function initiate_config(exe_path : string,
+    function test_initiate_config(exe_path : string,
                             enable_field_exist : boolean = true,  
-                            enabled : boolean = true) : any 
+                            enabled : boolean = true,
+                            print_cmd_exist : boolean = false,
+                            print_cmd : boolean = false) : any 
     {
         // for field enable
         workspace_config_mock.has.mockReturnValueOnce(enable_field_exist);
@@ -36,10 +38,19 @@ describe('ExtensionConfig tests', () => {
             workspace_config_mock.has.mockReturnValueOnce(false);
         }
 
+        //for print command
+        if (print_cmd_exist) {
+            workspace_config_mock.has.mockReturnValueOnce(true);
+            workspace_config_mock.get.mockReturnValueOnce(print_cmd);
+        }
+        else {
+            workspace_config_mock.has.mockReturnValueOnce(false);
+        }
+
         const engine_config = new ExtensionConfig(workspace_config_mock, "/abc/config.json", "/workspace");
 
         let get_count = 0;
-        expect(workspace_config_mock.has).toBeCalledTimes(2);
+        expect(workspace_config_mock.has).toBeCalledTimes(3);
         expect(workspace_config_mock.has).toBeCalledWith("enableScope");
         if (enable_field_exist) {
             get_count++;
@@ -53,6 +64,12 @@ describe('ExtensionConfig tests', () => {
         if (exe_path) {
             get_count++;
             expect(workspace_config_mock.get).toBeCalledWith("executablePath");
+        }
+
+        expect(workspace_config_mock.has).toBeCalledWith("printCmdBeforeExecute");
+        if (print_cmd_exist) {
+            get_count++;
+            expect(workspace_config_mock.get).toBeCalledWith("printCmdBeforeExecute");
         }
 
         expect(workspace_config_mock.get).toBeCalledTimes(get_count);
@@ -78,7 +95,7 @@ describe('ExtensionConfig tests', () => {
 
     test('Configured with no enable field', async () => {
 
-        const engine_config = initiate_config("/abc", false, false);
+        const engine_config = test_initiate_config("/abc", false, false);
 
         validateConfig(engine_config, "{}");
 
@@ -88,7 +105,7 @@ describe('ExtensionConfig tests', () => {
 
     test('Configured to be disabled', async () => {
 
-        const engine_config = initiate_config("/abc", true, false);
+        const engine_config = test_initiate_config("/abc", true, false);
 
         validateConfig(engine_config, "{}");
 
@@ -98,7 +115,7 @@ describe('ExtensionConfig tests', () => {
 
     test('Nothing is configured', async () => {
 
-        const engine_config = initiate_config(undefined);
+        const engine_config = test_initiate_config(undefined);
 
         validateConfig(engine_config, "{}");
 
@@ -119,7 +136,7 @@ describe('ExtensionConfig tests', () => {
     });
 
     test('executable path is configured as null', async () => {
-        const engine_config = initiate_config(null);
+        const engine_config = test_initiate_config(null);
 
         validateConfig(engine_config, "{}");
 
@@ -128,7 +145,7 @@ describe('ExtensionConfig tests', () => {
     });
 
     test('Configured with executable path', async () => {
-        const engine_config = initiate_config("/cscope_path");
+        const engine_config = test_initiate_config("/cscope_path");
 
         validateConfig(engine_config, "{}");
 
@@ -151,7 +168,7 @@ describe('ExtensionConfig tests', () => {
                 }
             ]
         }
-        const engine_config = initiate_config("/cscope_path");
+        const engine_config = test_initiate_config("/cscope_path");
 
         validateConfig(engine_config, JSON.stringify(scope_config));
 
@@ -184,7 +201,7 @@ describe('ExtensionConfig tests', () => {
                 }
             ]
         }
-        const engine_config = initiate_config("/cscope_path");
+        const engine_config = test_initiate_config("/cscope_path");
 
         validateConfig(engine_config, JSON.stringify(scope_config));
 
@@ -199,6 +216,9 @@ describe('ExtensionConfig tests', () => {
 
         const build_cmd = engine_config.getBuildCmd();
         expect(build_cmd).toStrictEqual("");
+
+        const print_cmd = engine_config.getPrintCmd();
+        expect(print_cmd).toStrictEqual(false);
     });
 
     test('Configured without open new col and no source code path', async () => {
@@ -212,7 +232,7 @@ describe('ExtensionConfig tests', () => {
                 }
             ]
         }
-        const engine_config = initiate_config("/cscope_path");
+        const engine_config = test_initiate_config("/cscope_path");
 
         validateConfig(engine_config, JSON.stringify(scope_config));
 
@@ -227,10 +247,13 @@ describe('ExtensionConfig tests', () => {
 
         const build_cmd = engine_config.getBuildCmd();
         expect(build_cmd).toStrictEqual("");
+
+        const print_cmd = engine_config.getPrintCmd();
+        expect(print_cmd).toStrictEqual(false);
     });
 
     test('validateConfig shall return false if file does not exist ', () => {
-        const engine_config = initiate_config("/cscope_path");
+        const engine_config = test_initiate_config("/cscope_path");
 
         fs.accessSync.mockImplementationOnce(() =>{
             throw ({message : "abc"});
@@ -238,7 +261,7 @@ describe('ExtensionConfig tests', () => {
 
         const config_valid = engine_config.validateConfig();
         expect(config_valid).toBe(false);
-        expect(engine_config.getErrorString()).toBe("No config json exist or config is invalid. User default");
+        expect(engine_config.getErrorString()).toBe("No config json exist or config is invalid. Use default");
 
         expect(fs.accessSync).toBeCalledTimes(1);
         expect(fs.accessSync).toBeCalledWith("/abc/config.json", fs.constants.R_OK);
@@ -256,7 +279,7 @@ describe('ExtensionConfig tests', () => {
     });
 
     test('validateConfig shall return false and unknown error if file does not exist and error does not contain message', () => {
-        const engine_config = initiate_config("/cscope_path");
+        const engine_config = test_initiate_config("/cscope_path");
 
         fs.accessSync.mockImplementationOnce(() =>{
             throw ({});
@@ -264,7 +287,7 @@ describe('ExtensionConfig tests', () => {
 
         const config_valid = engine_config.validateConfig();
         expect(config_valid).toBe(false);
-        expect(engine_config.getErrorString()).toBe("No config json exist or config is invalid. User default");
+        expect(engine_config.getErrorString()).toBe("No config json exist or config is invalid. Use default");
 
         expect(fs.accessSync).toBeCalledTimes(1);
         expect(fs.accessSync).toBeCalledWith("/abc/config.json", fs.constants.R_OK);
@@ -279,5 +302,48 @@ describe('ExtensionConfig tests', () => {
         expect(build_cmd).toStrictEqual("");
 
         fs.readFileSync.mockReset();
+    });
+
+    test('get cmd string shall return null string if not configured in settings', () => {
+        const engine_config = test_initiate_config("/cscope_path");
+        workspace_config_mock.has.mockReturnValueOnce(false);
+        let engine_cmd_cfg = engine_config.getEngineCmdStrings();
+        expect(engine_cmd_cfg).toBe(null);
+        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
+    });
+
+    test('get cmd string shall return object configured in settings', () => {
+        const engine_config = test_initiate_config("/cscope_path");
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce({abc:123, def:456});
+        let engine_cmd_cfg = engine_config.getEngineCmdStrings();
+        expect(engine_cmd_cfg).toStrictEqual({abc:123, def:456});
+        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
+    });
+
+    test('Configured to be disabled and print cmd exists but false', async () => {
+
+        const engine_config = test_initiate_config("/abc", true, false, true);
+
+        validateConfig(engine_config, "{}");
+
+        const exe_path = engine_config.getExePath();
+        expect(exe_path).toBe("");
+
+        const print_cmd = engine_config.getPrintCmd();
+        expect(print_cmd).toStrictEqual(false);
+    });
+
+    test('Configured to be disabled and print cmd exists and true', async () => {
+
+        const engine_config = test_initiate_config("/abc", true, false, true, true);
+
+        validateConfig(engine_config, "{}");
+
+        const exe_path = engine_config.getExePath();
+        expect(exe_path).toBe("");
+
+        const print_cmd = engine_config.getPrintCmd();
+        expect(print_cmd).toStrictEqual(true);
     });
 });

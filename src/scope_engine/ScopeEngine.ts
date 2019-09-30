@@ -5,6 +5,7 @@ const cmd_builder = require('../cmd_builder/cmd_builder');
 const fs = require('fs');
 const path = require('path');
 import CmdGenInterface from "../cmd_builder/CmdGenInterface";
+import OutputInterface from "../OutputInterface";
 import {cmd_result, config_variable_str} from '../util/scope4code_def';
 
 export default class ScopeEngine {
@@ -12,11 +13,14 @@ export default class ScopeEngine {
     private sourceFolders : string[];
     private databasePath : string;
     private lastRunResult : cmd_result;
+    private cmdPrinter : OutputInterface;
 
-    constructor (src_folders : string[], database_path : string) {
-        this.cmdGenerator = cmd_builder.build();
+    constructor (src_folders : string[], database_path : string, 
+        user_defined_cmds : object, cmd_printer : OutputInterface) {
+        this.cmdGenerator = cmd_builder.build(user_defined_cmds);
         this.sourceFolders = src_folders ? src_folders : [];
         this.databasePath = database_path ? database_path : null;
+        this.cmdPrinter = cmd_printer;
         this.lastRunResult = {
             success : false, code : 0, stdout : "", stderr : "Unkown error"
         };
@@ -38,6 +42,9 @@ export default class ScopeEngine {
     }
 
     async runCmdWithText(cmd : string) : Promise<boolean> {
+        if (this.cmdPrinter != null) {
+            this.cmdPrinter.notifyUser(cmd);
+        }
         const cmdArray = cmd.split(/[ \t]+/);
         let cmd_ret : cmd_result = {
             success : false, code : 0, stdout : "", stderr : "Unkown error"

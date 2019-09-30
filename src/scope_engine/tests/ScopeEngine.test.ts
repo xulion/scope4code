@@ -48,7 +48,7 @@ describe('ScopeEngine test', () => {
     test('run cmd with no param', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "abcd", stderr : ""});
 
-        const engine = new ScopeEngine(undefined, undefined);
+        const engine = new ScopeEngine(undefined, undefined, undefined, null);
 
         const result = await engine.runCmdWithText("cmd");
 
@@ -63,7 +63,7 @@ describe('ScopeEngine test', () => {
 
     test('run cmd with failure', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : "error"});
-        const engine = new ScopeEngine(undefined, undefined);
+        const engine = new ScopeEngine(undefined, undefined, undefined, null);
 
         const result = await engine.runCmdWithText("cmd");
 
@@ -78,7 +78,7 @@ describe('ScopeEngine test', () => {
 
     test('run cmd with failure (return non-zero code)', async () => {
         setupRunCmdMock({success : true, code : 1, stdout : "", stderr : "error code 1"});
-        const engine = new ScopeEngine(undefined, undefined);
+        const engine = new ScopeEngine(undefined, undefined, undefined, null);
 
         const result = await engine.runCmdWithText("cmd");
 
@@ -93,7 +93,7 @@ describe('ScopeEngine test', () => {
 
     test('run cmd with exe path and no param', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
-        const engine = new ScopeEngine(undefined, "mypath");
+        const engine = new ScopeEngine(undefined, "mypath", undefined, null);
 
         const result = await engine.runCmdWithText("cmd");
 
@@ -104,7 +104,7 @@ describe('ScopeEngine test', () => {
 
     test('run cmd with exe path and one param', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
-        const engine = new ScopeEngine(undefined, "/mypath/subpath");
+        const engine = new ScopeEngine(undefined, "/mypath/subpath", undefined, null);
 
         const result = await engine.runCmdWithText("cmd p1");
 
@@ -115,7 +115,7 @@ describe('ScopeEngine test', () => {
 
     test('run cmd with exe path and many param', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
-        const engine = new ScopeEngine(undefined, "c:\\mypath");
+        const engine = new ScopeEngine(undefined, "c:\\mypath", undefined, null);
 
         const result = await engine.runCmdWithText("cmd p1 p2 p3 p4 p5");
 
@@ -126,7 +126,7 @@ describe('ScopeEngine test', () => {
 
     test('run cmd with one param', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
-        const engine = new ScopeEngine(undefined, undefined);
+        const engine = new ScopeEngine(undefined, undefined, undefined, null);
 
         const result = await engine.runCmdWithText("cmd p1");
 
@@ -137,7 +137,7 @@ describe('ScopeEngine test', () => {
 
     test('run cmd with mulitple param and variant spaces', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
-        const engine = new ScopeEngine(undefined, undefined);
+        const engine = new ScopeEngine(undefined, undefined, undefined, null);
 
         //parameters are split by spaces and tabs
         const result = await engine.runCmdWithText("cmd p1  p2	p3    p4	p5");
@@ -153,7 +153,7 @@ describe('ScopeEngine test', () => {
         path.join.mockReturnValueOnce("c:\\abc\\cscope.files");
         setupRunCmdMock({success : true, code : 0, stdout : "file1.c\nfile2.c", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "c:\\abc");
+        const engine = new ScopeEngine(["folder1"], "c:\\abc", undefined, null);
 
         cmdGenInterface.listFileCmd.mockReturnValueOnce("cmd ${src_path} p2 p3");
         const result = await engine.generateFileList();
@@ -172,7 +172,7 @@ describe('ScopeEngine test', () => {
     test('generate file list fail', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], undefined);
+        const engine = new ScopeEngine(["folder1"], undefined, undefined, null);
 
         cmdGenInterface.listFileCmd.mockReturnValueOnce("cmd ${src_path} p2 p3");
         const result = await engine.generateFileList();
@@ -188,7 +188,7 @@ describe('ScopeEngine test', () => {
     test('generate file list with multiple param refer to source path', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["/folder2"], "/cscope_abc");
+        const engine = new ScopeEngine(["/folder2"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.listFileCmd.mockReturnValueOnce("cmd ${src_path} p2 p3    ${src_path}");
         const result = await engine.generateFileList();
@@ -207,7 +207,7 @@ describe('ScopeEngine test', () => {
 
         path.join.mockReturnValueOnce("/cscope_abc/cscope.files");
 
-        const engine = new ScopeEngine(["/folder1", "/folder2", "folder3"], "/cscope_abc");
+        const engine = new ScopeEngine(["/folder1", "/folder2", "folder3"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.listFileCmd.mockReturnValue("cmd ${src_path} p2 p3    ${src_path}");
         const result = await engine.generateFileList();
@@ -237,7 +237,7 @@ describe('ScopeEngine test', () => {
                                                 stdout : "",
                                                 stderr : ""});
 
-        const engine = new ScopeEngine(["/folder1", "/folder2", "folder3"], undefined);
+        const engine = new ScopeEngine(["/folder1", "/folder2", "folder3"], undefined, undefined, null);
 
         cmdGenInterface.listFileCmd.mockReturnValue("cmd ${src_path} p2 p3    ${src_path}");
         const result = await engine.generateFileList();
@@ -256,7 +256,7 @@ describe('ScopeEngine test', () => {
     test('build database', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.buildDatabaseCmd.mockReturnValueOnce("cmd build database");
         const result = await engine.buildDatabase();
@@ -267,7 +267,7 @@ describe('ScopeEngine test', () => {
     test('build database command has special path', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.buildDatabaseCmd.mockReturnValueOnce("cmd build database ${database_path}/databasefile");
         const result = await engine.buildDatabase();
@@ -281,7 +281,7 @@ describe('ScopeEngine test', () => {
     test('build database fail', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.buildDatabaseCmd.mockReturnValueOnce("cmd build database");
         const result = await engine.buildDatabase();
@@ -297,7 +297,7 @@ describe('ScopeEngine test', () => {
     test('search reference', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.findAllRefCmd.mockReturnValueOnce("cmd find ref of ${text}");
         const result = await engine.searchRef("abc");
@@ -308,7 +308,7 @@ describe('ScopeEngine test', () => {
     test('search reference fail', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.findAllRefCmd.mockReturnValueOnce("cmd find ref of ${text}");
         const result = await engine.searchRef("abc");
@@ -318,7 +318,7 @@ describe('ScopeEngine test', () => {
 
     test('search reference with text has special char', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.findAllRefCmd.mockReturnValueOnce("cmd find ref of${text}");
         const result = await engine.searchRef("{abc}");
@@ -328,7 +328,7 @@ describe('ScopeEngine test', () => {
 
     test('search reference with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
 
         cmdGenInterface.findAllRefCmd.mockReturnValueOnce("cmd find ref of${text} and ${text}");
         const result = await engine.searchRef("{abc}");
@@ -339,7 +339,7 @@ describe('ScopeEngine test', () => {
     test('search reference with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findAllRefCmd.mockReturnValueOnce("cmd find ref of${text} and ${text}");
         const result = await engine.searchRef("{abc}");
 
@@ -349,7 +349,7 @@ describe('ScopeEngine test', () => {
     test('search reference with text appeared in multiple places and with database path', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findAllRefCmd.mockReturnValueOnce("cmd find ref of${text} and ${text} using ${database_path}/databasefile");
         const result = await engine.searchRef("{abc}");
 
@@ -361,7 +361,7 @@ describe('ScopeEngine test', () => {
     test('search definition', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findDefineCmd.mockReturnValueOnce("cmd find definition of ${text}");
         const result = await engine.searchDefinition("abc");
 
@@ -371,7 +371,7 @@ describe('ScopeEngine test', () => {
     test('search definition fail', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findDefineCmd.mockReturnValueOnce("cmd find definition of ${text}");
         const result = await engine.searchDefinition("abc");
 
@@ -381,7 +381,7 @@ describe('ScopeEngine test', () => {
     test('search reference with text has special char', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findDefineCmd.mockReturnValueOnce("cmd find definition of${text}");
         const result = await engine.searchDefinition("{abc}");
 
@@ -391,7 +391,7 @@ describe('ScopeEngine test', () => {
     test('search reference with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findDefineCmd.mockReturnValueOnce("cmd find definition of${text} and ${text}");
         const result = await engine.searchDefinition("{abc}");
 
@@ -401,7 +401,7 @@ describe('ScopeEngine test', () => {
     test('search reference with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findDefineCmd.mockReturnValueOnce("cmd find definition of${text} and ${text}");
         const result = await engine.searchDefinition("{abc}");
 
@@ -411,7 +411,7 @@ describe('ScopeEngine test', () => {
     test('search reference with text appeared in multiple places and with database path', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findDefineCmd.mockReturnValueOnce("cmd find definition of${text} and ${text} using ${database_path}/databasefile");
         const result = await engine.searchDefinition("{abc}");
 
@@ -423,7 +423,7 @@ describe('ScopeEngine test', () => {
     test('search callee', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCalleeCmd.mockReturnValueOnce("cmd find callee of ${text}");
         const result = await engine.searchCallee("function_abc");
 
@@ -433,7 +433,7 @@ describe('ScopeEngine test', () => {
     test('search callee fail', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCalleeCmd.mockReturnValueOnce("cmd find callee of ${text}");
         const result = await engine.searchCallee("function_abc");
 
@@ -443,7 +443,7 @@ describe('ScopeEngine test', () => {
     test('search callee with text has special char', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCalleeCmd.mockReturnValueOnce("cmd find callee of${text}");
         const result = await engine.searchCallee("{abc}");
 
@@ -453,7 +453,7 @@ describe('ScopeEngine test', () => {
     test('search callee with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCalleeCmd.mockReturnValueOnce("cmd find callee of${text} and ${text}");
         const result = await engine.searchCallee("{abc}");
 
@@ -463,7 +463,7 @@ describe('ScopeEngine test', () => {
     test('search callee with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCalleeCmd.mockReturnValueOnce("cmd find callee of${text} and ${text}");
         const result = await engine.searchCallee("{abc}");
 
@@ -473,7 +473,7 @@ describe('ScopeEngine test', () => {
     test('search callee with text appeared in multiple places and with database path', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCalleeCmd.mockReturnValueOnce("cmd find callee of${text} and ${text} using ${database_path}/databasefile");
         const result = await engine.searchCallee("{abc}");
 
@@ -485,7 +485,7 @@ describe('ScopeEngine test', () => {
     test('search caller', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCallerCmd.mockReturnValueOnce("cmd find caller of ${text}");
         const result = await engine.searchCaller("function_abc");
 
@@ -495,7 +495,7 @@ describe('ScopeEngine test', () => {
     test('search caller fail', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCallerCmd.mockReturnValueOnce("cmd find caller of ${text}");
         const result = await engine.searchCaller("function_abc");
 
@@ -505,7 +505,7 @@ describe('ScopeEngine test', () => {
     test('search caller with text has special char', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCallerCmd.mockReturnValueOnce("cmd find caller of${text}");
         const result = await engine.searchCaller("{abc}");
 
@@ -515,7 +515,7 @@ describe('ScopeEngine test', () => {
     test('search caller with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCallerCmd.mockReturnValueOnce("cmd find caller of${text} and ${text}");
         const result = await engine.searchCaller("{abc}");
 
@@ -525,7 +525,7 @@ describe('ScopeEngine test', () => {
     test('search caller with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCallerCmd.mockReturnValueOnce("cmd find caller of${text} and ${text}");
         const result = await engine.searchCaller("{abc}");
 
@@ -535,7 +535,7 @@ describe('ScopeEngine test', () => {
     test('search caller with text appeared in multiple places and with database path', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findCallerCmd.mockReturnValueOnce("cmd find caller of${text} and ${text} using ${database_path}/databasefile");
         const result = await engine.searchCaller("{abc}");
 
@@ -547,7 +547,7 @@ describe('ScopeEngine test', () => {
     test('search text', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findTextCmd.mockReturnValueOnce("cmd find text of ${text}");
         const result = await engine.searchText("function_abc");
 
@@ -557,7 +557,7 @@ describe('ScopeEngine test', () => {
     test('search text fail', async () => {
         setupRunCmdMock({success : false, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findTextCmd.mockReturnValueOnce("cmd find text of ${text}");
         const result = await engine.searchText("function_abc");
 
@@ -567,7 +567,7 @@ describe('ScopeEngine test', () => {
     test('search text with text has special char', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findTextCmd.mockReturnValueOnce("cmd find text of${text}");
         const result = await engine.searchText("{abc}");
 
@@ -577,7 +577,7 @@ describe('ScopeEngine test', () => {
     test('search text with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findTextCmd.mockReturnValueOnce("cmd find text of${text} and ${text}");
         const result = await engine.searchText("{abc}");
 
@@ -587,7 +587,7 @@ describe('ScopeEngine test', () => {
     test('search text with text appeared in multiple places', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findTextCmd.mockReturnValueOnce("cmd find text of${text} and ${text}");
         const result = await engine.searchText("{abc}");
 
@@ -597,7 +597,7 @@ describe('ScopeEngine test', () => {
     test('search text with text appeared in multiple places and with database path', async () => {
         setupRunCmdMock({success : true, code : 0, stdout : "", stderr : ""});
 
-        const engine = new ScopeEngine(["folder1"], "/cscope_abc");
+        const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findTextCmd.mockReturnValueOnce("cmd find text of${text} and ${text} using ${database_path}/databasefile");
         const result = await engine.searchText("{abc}");
 
