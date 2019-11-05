@@ -1,3 +1,6 @@
+## [Beta v0.1.1]
+- All commands could be customized.
+
 ## [Beta v0.0.15]
 ### New Feauture
 - Support to disable cscope for a workspace.
