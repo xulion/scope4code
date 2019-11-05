@@ -74,6 +74,7 @@ scope4code uses cscope, which works very well with large project. Database build
 
     Built-in variables:
     There are variables defined could be used (some has to, such as ${text}) to build command. Here is a list of supported variables:
+    
     | name | description |
     | --- | --- |
     | ${src_path} | source folders configured in engine_configurations.cscope.paths, by default (if not configured) this would be workspace path |

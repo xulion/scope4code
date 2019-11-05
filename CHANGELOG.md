@@ -1,3 +1,6 @@
+## [Beta v0.1.2]
+- Fix variable tables in readme.
+
 ## [Beta v0.1.1]
 - All commands could be customized.
 
