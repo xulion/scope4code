@@ -24,7 +24,9 @@ export const config_variable_str = {
 
 export const config_field_str = {
     SCOPE_ENABLE : "enableScope",
-    EXE_PATH : "executablePath"
+    EXE_PATH : "executablePath",
+    PRINT_CMD : "printCmdBeforeExecute",
+    ENGINE_CMD_STR : "engineCommands",
 };
 
 export const default_config_values = {

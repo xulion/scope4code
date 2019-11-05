@@ -24,38 +24,36 @@ import SymbolLocation from './SymbolLocation';
 import OutputInterface from './OutputInterface';
 
 export default class CscopeExecutor {
-    source_paths : string[];
-    database_path : string;
-    build_command : string;
+    sourcePaths : string[];
+    databasePath : string;
+    buildCommand : string;
     outInf : OutputInterface;
     executorBusy : boolean;
     scopeEngine : ScopeEngine;
     scopConfig : ExtensionConfig;
+    userDefinedCmds : object;
 
     constructor(scope_config : ExtensionConfig, out:OutputInterface) {
-        this.source_paths = scope_config.getSourcePaths();
-        this.database_path = scope_config.getDatabasePath();
-        this.build_command = scope_config.getBuildCmd();
+        this.sourcePaths = scope_config.getSourcePaths();
+        this.databasePath = scope_config.getDatabasePath();
+        this.buildCommand = scope_config.getBuildCmd();
+        this.userDefinedCmds = scope_config.getEngineCmdStrings();
         this.outInf = out;
         this.executorBusy = false;
         this.scopConfig = scope_config;
 
-//        process.env.PATH += ":" + scope_config.getExePath(); 
         const exe_option = {
-            cwd : this.database_path,
+            cwd : this.databasePath,
             env :process.env
         }
 
-//        console.log(process.env.PATH);
-
-//        exe_option.env.PATH += ":" + scope_config.getExePath();
-//        console.log(exe_option.env.PATH);
-        this.scopeEngine = new ScopeEngine(this.source_paths, this.database_path);
+        this.scopeEngine = new ScopeEngine(this.sourcePaths, this.databasePath, 
+            this.userDefinedCmds, scope_config.getPrintCmd() ? out : null);
     }
 
     private databaseReady():boolean {
         try {
-            fs.accessSync(path.join(this.database_path, 'cscope.out'), fs.constants.R_OK | fs.constants.W_OK);
+            fs.accessSync(path.join(this.databasePath, 'cscope.out'), fs.constants.R_OK | fs.constants.W_OK);
             return true;
         }
         catch (err) {
@@ -66,7 +64,7 @@ export default class CscopeExecutor {
 
     public async checkTool():Promise<boolean> {
         const cscopeExecConfig = {
-            cwd: this.database_path
+            cwd: this.databasePath
         };
 
         const result = await this.scopeEngine.checkTool();
@@ -133,13 +131,13 @@ export default class CscopeExecutor {
             if (value) {
 
                 this.scopConfig.validateConfig();
-                this.source_paths = this.scopConfig.getSourcePaths();
-                this.database_path = this.scopConfig.getDatabasePath();
-                this.build_command = this.scopConfig.getBuildCmd();
+                this.sourcePaths = this.scopConfig.getSourcePaths();
+                this.databasePath = this.scopConfig.getDatabasePath();
+                this.buildCommand = this.scopConfig.getBuildCmd();
 
-                this.scopeEngine.updatePaths(this.source_paths, this.database_path);
+                this.scopeEngine.updatePaths(this.sourcePaths, this.databasePath);
 
-                if (this.build_command === "") {
+                if (this.buildCommand === "") {
                     ret = await this.internal_buildDataBase();
                     if (!ret) {
                         err_msg = this.scopeEngine.getStdErr();
@@ -148,11 +146,11 @@ export default class CscopeExecutor {
                 else
                 {    
                     const cscopeExecConfig = {
-                        cwd: this.database_path,
+                        cwd: this.databasePath,
                         env: process.env
                     };
                     
-                    let args = this.build_command.split(" ");
+                    let args = this.buildCommand.split(" ");
                     const cmd = args.shift();
 
                     const build_ret = spawnSync(cmd, args, cscopeExecConfig);
@@ -220,7 +218,7 @@ export default class CscopeExecutor {
         if (!this.executorBusy) {
 
             const cscopeExecConfig = {
-                cwd: this.database_path,
+                cwd: this.databasePath,
                 env: process.env
             };
 

@@ -2,7 +2,7 @@
   "name": "codescope",
   "displayName": "scope4code",
   "description": "cscope for vs code",
-  "version": "0.0.15",
+  "version": "0.1.00",
   "publisher": "xulion",
   "engines": {
     "vscode": "^1.17.0"
@@ -73,33 +73,38 @@
                 "default": "",
                 "description": "Path of executables."
             },
-            "scope4code.engineConfig": {
+            "scope4code.printCmdBeforeExecute": {
+                "type": "boolean",
+                "default": false,
+                "description": "Print command before execute."
+            },
+            "scope4code.engineCommands": {
                 "type": "object",
                 "default": {
-                    "platform_index" : {
-                        "win32" : 1,
-                        "linux" : 0,
-                        "mac_os" : 0,
-                        "others" : 0
+                    "config_index" : {
+                        "cscope" : {
+                            "win32" : 1,
+                            "linux" : 0
+                        }
                     },
                     "config" : [
                         {
                             "find_cmd" : "find ${src_path} -type f -name *.c -o -type f -name *.h -o -type f -name *.cpp -o -type f -name *.cc -o -type f -name *.mm",
                             "database_cmd" : "cscope -b -q -k",
-                            "find_all_ref" : "cscope -q -L0 ${text}",
-                            "find_define" : "cscope -q -L1 ${text}",
-                            "find_callee" : "cscope -q -L2 ${text}",
-                            "find_caller" : "cscope -q -L3 ${text}",
-                            "find_text" : "cscope -q -L4 ${text}"
+                            "find_all_ref" : "cscope -L0 ${text}",
+                            "find_define" : "cscope -L1 ${text}",
+                            "find_callee" : "cscope -L2 ${text}",
+                            "find_caller" : "cscope -L3 ${text}",
+                            "find_text" : "cscope -L4 ${text}"
                         },
                         {
                             "find_cmd" : "cmd /C dir /s/a/b ${src_path}\\*.c ${src_path}\\*.h ${src_path}\\*.cpp ${src_path}\\*.cc ${src_path}\\*.mm",
                             "database_cmd" : "cscope -b -q -k",
-                            "find_all_ref" : "cscope -q -L0 ${text}",
-                            "find_define" : "cscope -q -L1 ${text}",
-                            "find_callee" : "cscope -q -L2 ${text}",
-                            "find_caller" : "cscope -q -L3 ${text}",
-                            "find_text" : "cscope -q -L4 ${text}"
+                            "find_all_ref" : "cscope -L0 ${text}",
+                            "find_define" : "cscope -L1 ${text}",
+                            "find_callee" : "cscope -L2 ${text}",
+                            "find_caller" : "cscope -L3 ${text}",
+                            "find_text" : "cscope -L4 ${text}"
                         }
                     ]
                 }

@@ -22,11 +22,13 @@ const default_config = {
 export default class ExtensionConfig {
 
     private extEnabled : boolean = true;
+    private printCmd : boolean = false;
     private exePath : string = "";
-    private scopeConfig = null;
-    private configJsonPath = "";
-    private lastError = "";
-    private workspacePath = "";
+    private scopeConfig : any = null;
+    private configJsonPath : string = "";
+    private lastError : string = "";
+    private workspacePath : string = "";
+    private workspaceConfig : vscode.WorkspaceConfiguration = null;
 
     constructor(workspace_config : vscode.WorkspaceConfiguration, 
         config_json_path : string,
@@ -40,7 +42,12 @@ export default class ExtensionConfig {
         if (workspace_config.has(config_field_str.EXE_PATH)) {
             this.exePath = workspace_config.get(config_field_str.EXE_PATH);
         }
+
+        if (workspace_config.has(config_field_str.PRINT_CMD)) {
+            this.printCmd = workspace_config.get(config_field_str.PRINT_CMD);
+        }
         this.configJsonPath = config_json_path;
+        this.workspaceConfig = workspace_config;
     }
 
     private filterPathString(raw_path : string, special_string : string, target_string : string) : string {
@@ -57,7 +64,7 @@ export default class ExtensionConfig {
             //do nothing but generate new one
             validConfig = false;
             this.scopeConfig = default_config;
-            this.lastError = "No config json exist or config is invalid. User default";
+            this.lastError = "No config json exist or config is invalid. Use default";
         }
 
         if (!this.scopeConfig) {
@@ -68,6 +75,7 @@ export default class ExtensionConfig {
             if (!this.scopeConfig.open_new_column) { 
                 this.scopeConfig.open_new_column = default_config.open_new_column;
             }
+
             if ((this.scopeConfig.open_new_column.toLowerCase() != "yes") &&
             (this.scopeConfig.open_new_column.toLowerCase() != "no")) {
                 this.scopeConfig.open_new_column = default_config.open_new_column;
@@ -129,8 +137,20 @@ export default class ExtensionConfig {
         return src_paths;
     }
 
-    //shall be removed later
+    //shall be removed laterworkspaceConfig
     public getBuildCmd() : string {
         return this.scopeConfig.engine_configurations[0].cscope.build_command;
+    }
+
+    public getEngineCmdStrings() : object {
+        let engine_cmd_srings = null;
+        if (this.workspaceConfig && this.workspaceConfig.has(config_field_str.ENGINE_CMD_STR)) {
+            engine_cmd_srings = this.workspaceConfig.get(config_field_str.ENGINE_CMD_STR);
+        }
+        return engine_cmd_srings;
+    }
+
+    public getPrintCmd() : boolean {
+        return this.printCmd;
     }
 };
