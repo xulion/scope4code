@@ -1,3 +1,6 @@
+## [Beta v0.1.3]
+- Support definition search in context menu.
+
 ## [Beta v0.1.2]
 - Fix variable tables in readme.
 

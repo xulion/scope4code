@@ -185,7 +185,7 @@ export default class CscopeExecutor {
         return ret;
     }
 
-    private parseSearchResult(search_result : string) : SymbolLocation[] {
+    private parseSearchResult(search_result : string, symbol : string) : SymbolLocation[] {
         let list = [];
         const fileList = search_result.split('\n');
         fileList.forEach((line) =>{
@@ -200,6 +200,10 @@ export default class CscopeExecutor {
                 {
                     otherText += ` ${contents[i]}`;
                 }
+
+//                let code_content_start_pos = contents[0].length + contents[1].length + contents[2].length + 3;
+//                let code_content_start = line.substr(code_content_start_pos);
+//                let start_pos = code_content_start.search(symbol) + 4;
 
                 list.push(new SymbolLocation(fileName, lineNum, 0, 0, otherText));
             }
@@ -258,7 +262,7 @@ export default class CscopeExecutor {
         let list = [];
         if (await this.scopeEngine.searchRef(symbol)) {
             const search_result = this.scopeEngine.getStdOut();
-            list = this.parseSearchResult(search_result.toString());
+            list = this.parseSearchResult(search_result.toString(), symbol);
         }
         return list;
     }
@@ -267,7 +271,7 @@ export default class CscopeExecutor {
         let list = [];
         if (await this.scopeEngine.searchDefinition(symbol)) {
             const search_result = this.scopeEngine.getStdOut();
-            list = this.parseSearchResult(search_result.toString());
+            list = this.parseSearchResult(search_result.toString(), symbol);
         }
         return list;
     }
@@ -276,7 +280,7 @@ export default class CscopeExecutor {
         let list = [];
         if (await this.scopeEngine.searchCallee(symbol)) {
             const search_result = this.scopeEngine.getStdOut();
-            list = this.parseSearchResult(search_result.toString());
+            list = this.parseSearchResult(search_result.toString(), symbol);
         }
         return list;
     }
@@ -285,7 +289,7 @@ export default class CscopeExecutor {
         let list = [];
         if (await this.scopeEngine.searchCaller(symbol)) {
             const search_result = this.scopeEngine.getStdOut();
-            list = this.parseSearchResult(search_result.toString());
+            list = this.parseSearchResult(search_result.toString(), symbol);
         }
         return list;
     }
@@ -294,7 +298,7 @@ export default class CscopeExecutor {
         let list = [];
         if (await this.scopeEngine.searchText(symbol)) {
             const search_result = this.scopeEngine.getStdOut();
-            list = this.parseSearchResult(search_result.toString());
+            list = this.parseSearchResult(search_result.toString(), symbol);
         }
         return list;
     }
