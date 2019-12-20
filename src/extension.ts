@@ -139,7 +139,7 @@ export function activate(context: vscode.ExtensionContext) {
         });*/
     
         context.subscriptions.push(vscode.languages.registerReferenceProvider(["cpp", "c"], new RefProvider(executor)));
-//        context.subscriptions.push(vscode.languages.registerDefinitionProvider(['cpp', 'c'], new DefinitionProvider(executor)));
+        context.subscriptions.push(vscode.languages.registerDefinitionProvider(['cpp', 'c'], new DefinitionProvider(executor)));
         context.subscriptions.push(searchResult, providerRegistrations, findCalleeCmd);    
         context.subscriptions.push(findCallerCmd, findTextCmd);//, findIncludeCmd);   
         
