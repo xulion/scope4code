@@ -24,20 +24,20 @@ const _cscope_config = {
         {
             find_cmd : "find ${src_path} -type f -name *.c -o -type f -name *.h -o -type f -name *.cpp -o -type f -name *.cc -o -type f -name *.mm",
             database_cmd : "cscope -b -q -k",
-            find_all_ref : "cscope -q -L0 ${text}",
-            find_define : "cscope -q -L1 ${text}",
-            find_callee : "cscope -q -L2 ${text}",
-            find_caller : "cscope -q -L3 ${text}",
-            find_text : "cscope -q -L4 ${text}"
+            find_all_ref : "cscope -q -k -L0 ${text}",
+            find_define : "cscope -q -k -L1 ${text}",
+            find_callee : "cscope -q -k -L2 ${text}",
+            find_caller : "cscope -q -k -L3 ${text}",
+            find_text : "cscope -q -k -L4 ${text}"
         },
         {
             find_cmd : "cmd /C dir /s/a/b ${src_path}\\*.c ${src_path}\\*.h ${src_path}\\*.cpp ${src_path}\\*.cc ${src_path}\\*.mm",
             database_cmd : "cscope -b -q -k",
-            find_all_ref : "cscope -q -L0 ${text}",
-            find_define : "cscope -q -L1 ${text}",
-            find_callee : "cscope -q -L2 ${text}",
-            find_caller : "cscope -q -L3 ${text}",
-            find_text : "cscope -q -L4 ${text}"
+            find_all_ref : "cscope -q -k -L0 ${text}",
+            find_define : "cscope -q -k -L1 ${text}",
+            find_callee : "cscope -q -k -L2 ${text}",
+            find_caller : "cscope -q -k -L3 ${text}",
+            find_text : "cscope -q -k -L4 ${text}"
         }
     ]
 };
@@ -71,19 +71,19 @@ describe('cscope cmd_builder test', () => {
         expect(build_database_cmd).toBe("cscope -b -q -k");
 
         const find_all_ref_cmd = cmdGenerator.findAllRefCmd();
-        expect(find_all_ref_cmd).toBe("cscope -L0 ${text}");
+        expect(find_all_ref_cmd).toBe("cscope -q -k -L0 ${text}");
 
         const find_define_cmd = cmdGenerator.findDefineCmd();
-        expect(find_define_cmd).toBe("cscope -L1 ${text}");
+        expect(find_define_cmd).toBe("cscope -q -k -L1 ${text}");
 
         const find_callee_cmd = cmdGenerator.findCalleeCmd();
-        expect(find_callee_cmd).toBe("cscope -L2 ${text}");
+        expect(find_callee_cmd).toBe("cscope -q -k -L2 ${text}");
 
         const find_caller_cmd = cmdGenerator.findCallerCmd();
-        expect(find_caller_cmd).toBe("cscope -L3 ${text}");
+        expect(find_caller_cmd).toBe("cscope -q -k -L3 ${text}");
 
         const find_text_cmd = cmdGenerator.findTextCmd();
-        expect(find_text_cmd).toBe("cscope -L4 ${text}");
+        expect(find_text_cmd).toBe("cscope -q -k -L4 ${text}");
     });
 
     test('create cmd object for windows', () => {
@@ -100,19 +100,19 @@ describe('cscope cmd_builder test', () => {
         expect(build_database_cmd).toBe("cscope -b -q -k");
 
         const find_all_ref_cmd = cmdGenerator.findAllRefCmd();
-        expect(find_all_ref_cmd).toBe("cscope -L0 ${text}");
+        expect(find_all_ref_cmd).toBe("cscope -q -k -L0 ${text}");
 
         const find_define_cmd = cmdGenerator.findDefineCmd();
-        expect(find_define_cmd).toBe("cscope -L1 ${text}");
+        expect(find_define_cmd).toBe("cscope -q -k -L1 ${text}");
 
         const find_callee_cmd = cmdGenerator.findCalleeCmd();
-        expect(find_callee_cmd).toBe("cscope -L2 ${text}");
+        expect(find_callee_cmd).toBe("cscope -q -k -L2 ${text}");
 
         const find_caller_cmd = cmdGenerator.findCallerCmd();
-        expect(find_caller_cmd).toBe("cscope -L3 ${text}");
+        expect(find_caller_cmd).toBe("cscope -q -k -L3 ${text}");
 
         const find_text_cmd = cmdGenerator.findTextCmd();
-        expect(find_text_cmd).toBe("cscope -L4 ${text}");
+        expect(find_text_cmd).toBe("cscope -q -k -L4 ${text}");
     });
 
     test('create cmd object for mac_os', () => {
@@ -132,19 +132,19 @@ describe('cscope cmd_builder test', () => {
         expect(build_database_cmd).toBe("cscope -b -q -k");
 
         const find_all_ref_cmd = cmdGenerator.findAllRefCmd();
-        expect(find_all_ref_cmd).toBe("cscope -L0 ${text}");
+        expect(find_all_ref_cmd).toBe("cscope -q -k -L0 ${text}");
 
         const find_define_cmd = cmdGenerator.findDefineCmd();
-        expect(find_define_cmd).toBe("cscope -L1 ${text}");
+        expect(find_define_cmd).toBe("cscope -q -k -L1 ${text}");
 
         const find_callee_cmd = cmdGenerator.findCalleeCmd();
-        expect(find_callee_cmd).toBe("cscope -L2 ${text}");
+        expect(find_callee_cmd).toBe("cscope -q -k -L2 ${text}");
 
         const find_caller_cmd = cmdGenerator.findCallerCmd();
-        expect(find_caller_cmd).toBe("cscope -L3 ${text}");
+        expect(find_caller_cmd).toBe("cscope -q -k -L3 ${text}");
 
         const find_text_cmd = cmdGenerator.findTextCmd();
-        expect(find_text_cmd).toBe("cscope -L4 ${text}");
+        expect(find_text_cmd).toBe("cscope -q -k -L4 ${text}");
     });
 
     test('create cmd object for mac_os', () => {
@@ -164,19 +164,19 @@ describe('cscope cmd_builder test', () => {
         expect(build_database_cmd).toBe("cscope -b -q -k");
 
         const find_all_ref_cmd = cmdGenerator.findAllRefCmd();
-        expect(find_all_ref_cmd).toBe("cscope -L0 ${text}");
+        expect(find_all_ref_cmd).toBe("cscope -q -k -L0 ${text}");
 
         const find_define_cmd = cmdGenerator.findDefineCmd();
-        expect(find_define_cmd).toBe("cscope -L1 ${text}");
+        expect(find_define_cmd).toBe("cscope -q -k -L1 ${text}");
 
         const find_callee_cmd = cmdGenerator.findCalleeCmd();
-        expect(find_callee_cmd).toBe("cscope -L2 ${text}");
+        expect(find_callee_cmd).toBe("cscope -q -k -L2 ${text}");
 
         const find_caller_cmd = cmdGenerator.findCallerCmd();
-        expect(find_caller_cmd).toBe("cscope -L3 ${text}");
+        expect(find_caller_cmd).toBe("cscope -q -k -L3 ${text}");
 
         const find_text_cmd = cmdGenerator.findTextCmd();
-        expect(find_text_cmd).toBe("cscope -L4 ${text}");
+        expect(find_text_cmd).toBe("cscope -q -k -L4 ${text}");
     });
 
     test('checkTool shall return false if command line returns nothing', () => {

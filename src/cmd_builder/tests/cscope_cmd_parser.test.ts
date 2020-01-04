@@ -14,20 +14,20 @@
         {
             "find_cmd" : "find ${src_path} -type f -name *.c -o -type f -name *.h -o -type f -name *.cpp -o -type f -name *.cc -o -type f -name *.mm",
             "database_cmd" : "cscope -b -q -k",
-            "find_all_ref" : "cscope -q -L0 ${text}",
-            "find_define" : "cscope -q -L1 ${text}",
-            "find_callee" : "cscope -q -L2 ${text}",
-            "find_caller" : "cscope -q -L3 ${text}",
-            "find_text" : "cscope -q -L4 ${text}"
+            "find_all_ref" : "cscope -q -k -L0 ${text}",
+            "find_define" : "cscope -q -k -L1 ${text}",
+            "find_callee" : "cscope -q -k -L2 ${text}",
+            "find_caller" : "cscope -q -k -L3 ${text}",
+            "find_text" : "cscope -q -k -L4 ${text}"
         },
         {
             "find_cmd" : "cmd /C dir /s/a/b ${src_path}\\*.c ${src_path}\\*.h ${src_path}\\*.cpp ${src_path}\\*.cc ${src_path}\\*.mm",
             "database_cmd" : "cscope -b -q -k",
-            "find_all_ref" : "cscope -q -L0 ${text}",
-            "find_define" : "cscope -q -L1 ${text}",
-            "find_callee" : "cscope -q -L2 ${text}",
-            "find_caller" : "cscope -q -L3 ${text}",
-            "find_text" : "cscope -q -L4 ${text}"
+            "find_all_ref" : "cscope -q -k -L0 ${text}",
+            "find_define" : "cscope -q -k -L1 ${text}",
+            "find_callee" : "cscope -q -k -L2 ${text}",
+            "find_caller" : "cscope -q -k -L3 ${text}",
+            "find_text" : "cscope -q -k -L4 ${text}"
         }
     ]
 }
@@ -44,20 +44,20 @@ const cscope_config = {
         {
             find_cmd : "find ${src_path} -type f -name *.c -o -type f -name *.h -o -type f -name *.cpp -o -type f -name *.cc -o -type f -name *.mm",
             database_cmd : "cscope -b -q -k",
-            find_all_ref : "cscope -L0 ${text}",
-            find_define : "cscope -L1 ${text}",
-            find_callee : "cscope -L2 ${text}",
-            find_caller : "cscope -L3 ${text}",
-            find_text : "cscope -L4 ${text}"
+            find_all_ref : "cscope -q -k -L0 ${text}",
+            find_define : "cscope -q -k -L1 ${text}",
+            find_callee : "cscope -q -k -L2 ${text}",
+            find_caller : "cscope -q -k -L3 ${text}",
+            find_text : "cscope -q -k -L4 ${text}"
         },
         {
             find_cmd : "cmd /C dir /s/a/b ${src_path}\\*.c ${src_path}\\*.h ${src_path}\\*.cpp ${src_path}\\*.cc ${src_path}\\*.mm",
             database_cmd : "cscope -b -q -k",
-            find_all_ref : "cscope -L0 ${text}",
-            find_define : "cscope -L1 ${text}",
-            find_callee : "cscope -L2 ${text}",
-            find_caller : "cscope -L3 ${text}",
-            find_text : "cscope -L4 ${text}"
+            find_all_ref : "cscope -q -k -L0 ${text}",
+            find_define : "cscope -q -k -L1 ${text}",
+            find_callee : "cscope -q -k -L2 ${text}",
+            find_caller : "cscope -q -k -L3 ${text}",
+            find_text : "cscope -q -k -L4 ${text}"
         }
     ]
 };
