@@ -1,5 +1,10 @@
+## [Beta v0.1.4]
+- Update default cmd line param.
+   Credit to [Oleg A. Arkhangelsky](https://github.com/oleg-umnik).
+
 ## [Beta v0.1.3]
 - Support definition search in context menu.
+   Credit to [Oleg A. Arkhangelsky](https://github.com/oleg-umnik).
 
 ## [Beta v0.1.2]
 - Fix variable tables in readme.
