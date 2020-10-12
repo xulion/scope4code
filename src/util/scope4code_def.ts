@@ -23,10 +23,13 @@ export const config_variable_str = {
 };
 
 export const config_field_str = {
-    SCOPE_ENABLE : "enableScope",
-    EXE_PATH : "executablePath",
-    PRINT_CMD : "printCmdBeforeExecute",
-    ENGINE_CMD_STR : "engineCommands",
+    SCOPE_ENABLE :           "enableScope",
+    EXE_PATH :               "executablePath",
+    PRINT_CMD :              "printCmdBeforeExecute",
+    ENGINE_CMD_STR :         "engineCommands",
+    DATABASE_PATH_STR :      "databasePath",
+    OPEN_RESULT_IN_NEW_COL : "openInNewCol",
+    SOURCE_CODE_PATHS :      "sourceCodePaths"
 };
 
 export const default_config_values = {

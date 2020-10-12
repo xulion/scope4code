@@ -2,7 +2,7 @@
   "name": "codescope",
   "displayName": "scope4code",
   "description": "cscope for vs code",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "publisher": "xulion",
   "engines": {
     "vscode": "^1.17.0"
@@ -77,6 +77,22 @@
                 "type": "boolean",
                 "default": false,
                 "description": "Print command before execute."
+            },
+            "scope4code.databasePath": {
+                "type": "string",
+                "default": "${workspaceRoot}/.vscode/cscope",
+                "description": "cscope database path."
+            },
+            "scope4code.openInNewCol": {
+                "type": "boolean",
+                "default": false,
+                "description": "Open search result in new column."
+            },
+            "scope4code.sourceCodePaths": {
+                "type": "array",
+                "default": [
+                    "${workspaceRoot}"
+                ]
             },
             "scope4code.engineCommands": {
                 "type": "object",

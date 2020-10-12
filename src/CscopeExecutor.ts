@@ -26,7 +26,6 @@ import OutputInterface from './OutputInterface';
 export default class CscopeExecutor {
     sourcePaths : string[];
     databasePath : string;
-    buildCommand : string;
     outInf : OutputInterface;
     executorBusy : boolean;
     scopeEngine : ScopeEngine;
@@ -36,7 +35,6 @@ export default class CscopeExecutor {
     constructor(scope_config : ExtensionConfig, out:OutputInterface) {
         this.sourcePaths = scope_config.getSourcePaths();
         this.databasePath = scope_config.getDatabasePath();
-        this.buildCommand = scope_config.getBuildCmd();
         this.userDefinedCmds = scope_config.getEngineCmdStrings();
         this.outInf = out;
         this.executorBusy = false;
@@ -130,40 +128,14 @@ export default class CscopeExecutor {
 
             if (value) {
 
-                this.scopConfig.validateConfig();
                 this.sourcePaths = this.scopConfig.getSourcePaths();
                 this.databasePath = this.scopConfig.getDatabasePath();
-                this.buildCommand = this.scopConfig.getBuildCmd();
 
                 this.scopeEngine.updatePaths(this.sourcePaths, this.databasePath);
 
-                if (this.buildCommand === "") {
-                    ret = await this.internal_buildDataBase();
-                    if (!ret) {
-                        err_msg = this.scopeEngine.getStdErr();
-                    }
-                }
-                else
-                {    
-                    const cscopeExecConfig = {
-                        cwd: this.databasePath,
-                        env: process.env
-                    };
-                    
-                    let args = this.buildCommand.split(" ");
-                    const cmd = args.shift();
-
-                    const build_ret = spawnSync(cmd, args, cscopeExecConfig);
-
-                    if ((build_ret.stderr) && (build_ret.stderr.length > 0)) {
-                        err_msg = build_ret.stderr.toString();
-                    }
-                    else if (build_ret.stdout.toString().search("fail") === 0) {
-                        err_msg = build_ret.stdout.toString();
-                    }
-                    else {
-                        ret = true;
-                    }
+                ret = await this.internal_buildDataBase();
+                if (!ret) {
+                    err_msg = this.scopeEngine.getStdErr();
                 }
             }
             else {
@@ -200,10 +172,6 @@ export default class CscopeExecutor {
                 {
                     otherText += ` ${contents[i]}`;
                 }
-
-//                let code_content_start_pos = contents[0].length + contents[1].length + contents[2].length + 3;
-//                let code_content_start = line.substr(code_content_start_pos);
-//                let start_pos = code_content_start.search(symbol) + 4;
 
                 list.push(new SymbolLocation(fileName, lineNum, 0, 0, otherText));
             }

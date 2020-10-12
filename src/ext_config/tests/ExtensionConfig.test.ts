@@ -17,333 +17,274 @@ describe('ExtensionConfig tests', () => {
         jest.resetAllMocks();
     });
 
-    function test_initiate_config(exe_path : string,
-                            enable_field_exist : boolean = true,  
-                            enabled : boolean = true,
-                            print_cmd_exist : boolean = false,
-                            print_cmd : boolean = false) : any 
-    {
-        // for field enable
-        workspace_config_mock.has.mockReturnValueOnce(enable_field_exist);
-        if (enable_field_exist) {
-            workspace_config_mock.get.mockReturnValueOnce(enabled);
-        }
-
-        //for field exePath
-        if (exe_path) {
-            workspace_config_mock.has.mockReturnValueOnce(true);
-            workspace_config_mock.get.mockReturnValueOnce(exe_path);
-        }
-        else {
-            workspace_config_mock.has.mockReturnValueOnce(false);
-        }
-
-        //for print command
-        if (print_cmd_exist) {
-            workspace_config_mock.has.mockReturnValueOnce(true);
-            workspace_config_mock.get.mockReturnValueOnce(print_cmd);
-        }
-        else {
-            workspace_config_mock.has.mockReturnValueOnce(false);
-        }
-
-        const engine_config = new ExtensionConfig(workspace_config_mock, "/abc/config.json", "/workspace");
-
-        let get_count = 0;
-        expect(workspace_config_mock.has).toBeCalledTimes(3);
-        expect(workspace_config_mock.has).toBeCalledWith("enableScope");
-        if (enable_field_exist) {
-            get_count++;
-            expect(workspace_config_mock.get).toBeCalledWith("enableScope");
-        }
-        else {
-            enabled = true;
-        }
-        
-        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
-        if (exe_path) {
-            get_count++;
-            expect(workspace_config_mock.get).toBeCalledWith("executablePath");
-        }
-
-        expect(workspace_config_mock.has).toBeCalledWith("printCmdBeforeExecute");
-        if (print_cmd_exist) {
-            get_count++;
-            expect(workspace_config_mock.get).toBeCalledWith("printCmdBeforeExecute");
-        }
-
-        expect(workspace_config_mock.get).toBeCalledTimes(get_count);
-
-        const engine_enabled = engine_config.enabled();
-        expect(engine_enabled).toBe(enabled);
-        return engine_config;
+    /////////////////////////////////////////////////////////////////////////////
+    // test helper functions 
+    /////////////////////////////////////////////////////////////////////////////
+    function enableExtention(enable_ext : boolean) : void {
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(enable_ext);
     }
 
-    function validateConfig(engine_config : any, config_json_str : string) {
-        fs.readFileSync.mockReturnValueOnce(Buffer.from(config_json_str));
 
-        const config_valid = engine_config.validateConfig();
-        expect(config_valid).toBe(true);
+    /////////////////////////////////////////////////////////////////////////////
+    // test cases 
+    /////////////////////////////////////////////////////////////////////////////
+    test('Configured with nothing configured', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
 
-        expect(fs.accessSync).toBeCalledTimes(1);
-        expect(fs.accessSync).toBeCalledWith("/abc/config.json", fs.constants.R_OK);
-
-        expect(fs.readFileSync).toBeCalledTimes(1);
-        expect(fs.readFileSync).toBeCalledWith("/abc/config.json");
-        fs.readFileSync.mockReset();
-    }
-
-    test('Configured with no enable field', async () => {
-
-        const engine_config = test_initiate_config("/abc", false, false);
-
-        validateConfig(engine_config, "{}");
+        const extention_enabled = engine_config.enabled();
+        expect(extention_enabled).toStrictEqual(true);
 
         const exe_path = engine_config.getExePath();
-        expect(exe_path).toBe("/abc");
+        expect(exe_path).toStrictEqual("");
+
+        const database_path = engine_config.getDatabasePath();
+        expect(database_path).toStrictEqual("/workspace/.vscode/cscope");
+
+        const open_in_new_col = engine_config.openInNewCol();
+        expect(open_in_new_col).toStrictEqual(false);
+
+        let engine_cmd_cfg = engine_config.getEngineCmdStrings();
+        expect(engine_cmd_cfg).toStrictEqual(null);
+
+        const print_cmd = engine_config.getPrintCmd();
+        expect(print_cmd).toStrictEqual(false);
+
+        const src_paths = engine_config.getSourcePaths();
+        expect(src_paths).toStrictEqual(["/workspace"]);
     });
 
     test('Configured to be disabled', async () => {
 
-        const engine_config = test_initiate_config("/abc", true, false);
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
 
-        validateConfig(engine_config, "{}");
-
-        const exe_path = engine_config.getExePath();
-        expect(exe_path).toBe("");
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(false);
+        const extention_enabled = engine_config.enabled();
+        expect(extention_enabled).toStrictEqual(false);
+        expect(workspace_config_mock.has).toBeCalledWith("enableScope");
+        expect(workspace_config_mock.get).toBeCalledWith("enableScope");
     });
 
-    test('Nothing is configured', async () => {
+    test('Configured to be enabled', async () => {
 
-        const engine_config = test_initiate_config(undefined);
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
 
-        validateConfig(engine_config, "{}");
-
-        const exe_path = engine_config.getExePath();
-        expect(exe_path).toBe("");
-
-        const database_path = engine_config.getDatabasePath();
-        expect(database_path).toBe("/workspace/.vscode/cscope");
-
-        const open_in_new_col = engine_config.openInNewCol();
-        expect(open_in_new_col).toBe(false);
-
-        const src_paths = engine_config.getSourcePaths();
-        expect(src_paths).toStrictEqual(["/workspace"]);
-
-        const build_cmd = engine_config.getBuildCmd();
-        expect(build_cmd).toStrictEqual("");
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(true);
+        const extention_enabled = engine_config.enabled();
+        expect(extention_enabled).toStrictEqual(true);
+        expect(workspace_config_mock.has).toBeCalledWith("enableScope");
+        expect(workspace_config_mock.get).toBeCalledWith("enableScope");
     });
 
     test('executable path is configured as null', async () => {
-        const engine_config = test_initiate_config(null);
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
 
-        validateConfig(engine_config, "{}");
+        enableExtention(true);
 
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("");
         const exe_path = engine_config.getExePath();
-        expect(exe_path).toBe("");
+        expect(exe_path).toStrictEqual("");
+        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
+        expect(workspace_config_mock.get).toBeCalledWith("executablePath");
     });
 
     test('Configured with executable path', async () => {
-        const engine_config = test_initiate_config("/cscope_path");
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
 
-        validateConfig(engine_config, "{}");
+        enableExtention(true);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("/cscope_path");
+        let exe_path = engine_config.getExePath();
+        expect(exe_path).toStrictEqual("/cscope_path");
 
-        const exe_path = engine_config.getExePath();
-        expect(exe_path).toBe("/cscope_path");
+        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
+        expect(workspace_config_mock.get).toBeCalledWith("executablePath");
+
+        enableExtention(true);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("${workspaceRoot}/cscope_path");
+        exe_path = engine_config.getExePath();
+        expect(exe_path).toStrictEqual("/workspace/cscope_path");
+
+        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
+        expect(workspace_config_mock.get).toBeCalledWith("executablePath");
+    });
+
+    test('Configured with executable path but extention is disabled', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        enableExtention(false);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("/cscope_path");
+        let exe_path = engine_config.getExePath();
+        expect(exe_path).toStrictEqual("");
     });
 
     test('Configured without database path', async () => {
-        const scope_config = {
-            version : "0.0.13",
-            open_new_column : "no",
-            engine_configurations: [
-                {
-                    cscope : {
-                        "build_command" : "abc",
-                        paths : [
-                            "/my_source/src"
-                        ]
-                    }
-                }
-            ]
-        }
-        const engine_config = test_initiate_config("/cscope_path");
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
 
-        validateConfig(engine_config, JSON.stringify(scope_config));
-
-        const database_path = engine_config.getDatabasePath();
-        expect(database_path).toBe("/workspace/.vscode/cscope");
-
-        const open_in_new_col = engine_config.openInNewCol();
-        expect(open_in_new_col).toBe(false);
-
-        const src_paths = engine_config.getSourcePaths();
-        expect(src_paths).toStrictEqual(["/my_source/src"]);
-
-        const build_cmd = engine_config.getBuildCmd();
-        expect(build_cmd).toStrictEqual("abc");
-    });
-
-    test('Configured with database path and new col mode', async () => {
-        const scope_config = {
-            version : "0.0.13",
-            open_new_column : "YeS",
-            engine_configurations: [
-                {
-                    cscope : {
-                        paths : [
-                            "/my_source1/src",
-                            "/my_source2/src"
-                        ],
-                        database_path : "/database/cscope"
-                    }
-                }
-            ]
-        }
-        const engine_config = test_initiate_config("/cscope_path");
-
-        validateConfig(engine_config, JSON.stringify(scope_config));
-
-        const database_path = engine_config.getDatabasePath();
-        expect(database_path).toBe("/database/cscope");
-
-        const open_in_new_col = engine_config.openInNewCol();
-        expect(open_in_new_col).toBe(true);
-
-        const src_paths = engine_config.getSourcePaths();
-        expect(src_paths).toStrictEqual(["/my_source1/src", "/my_source2/src"]);
-
-        const build_cmd = engine_config.getBuildCmd();
-        expect(build_cmd).toStrictEqual("");
-
-        const print_cmd = engine_config.getPrintCmd();
-        expect(print_cmd).toStrictEqual(false);
-    });
-
-    test('Configured without open new col and no source code path', async () => {
-        const scope_config = {
-            version : "0.0.13",
-            engine_configurations: [
-                {
-                    cscope : {
-                        database_path : "/database/cscope"
-                    }
-                }
-            ]
-        }
-        const engine_config = test_initiate_config("/cscope_path");
-
-        validateConfig(engine_config, JSON.stringify(scope_config));
-
-        const database_path = engine_config.getDatabasePath();
-        expect(database_path).toBe("/database/cscope");
-
-        const open_in_new_col = engine_config.openInNewCol();
-        expect(open_in_new_col).toBe(false);
-
-        const src_paths = engine_config.getSourcePaths();
-        expect(src_paths).toStrictEqual(["/workspace"]);
-
-        const build_cmd = engine_config.getBuildCmd();
-        expect(build_cmd).toStrictEqual("");
-
-        const print_cmd = engine_config.getPrintCmd();
-        expect(print_cmd).toStrictEqual(false);
-    });
-
-    test('validateConfig shall return false if file does not exist ', () => {
-        const engine_config = test_initiate_config("/cscope_path");
-
-        fs.accessSync.mockImplementationOnce(() =>{
-            throw ({message : "abc"});
-        });
-
-        const config_valid = engine_config.validateConfig();
-        expect(config_valid).toBe(false);
-        expect(engine_config.getErrorString()).toBe("No config json exist or config is invalid. Use default");
-
-        expect(fs.accessSync).toBeCalledTimes(1);
-        expect(fs.accessSync).toBeCalledWith("/abc/config.json", fs.constants.R_OK);
-
-        const open_in_new_col = engine_config.openInNewCol();
-        expect(open_in_new_col).toBe(false);
-
-        const src_paths = engine_config.getSourcePaths();
-        expect(src_paths).toStrictEqual(["/workspace"]);
-
-        const build_cmd = engine_config.getBuildCmd();
-        expect(build_cmd).toStrictEqual("");
-
-        fs.readFileSync.mockReset();
-    });
-
-    test('validateConfig shall return false and unknown error if file does not exist and error does not contain message', () => {
-        const engine_config = test_initiate_config("/cscope_path");
-
-        fs.accessSync.mockImplementationOnce(() =>{
-            throw ({});
-        });
-
-        const config_valid = engine_config.validateConfig();
-        expect(config_valid).toBe(false);
-        expect(engine_config.getErrorString()).toBe("No config json exist or config is invalid. Use default");
-
-        expect(fs.accessSync).toBeCalledTimes(1);
-        expect(fs.accessSync).toBeCalledWith("/abc/config.json", fs.constants.R_OK);
-
-        const open_in_new_col = engine_config.openInNewCol();
-        expect(open_in_new_col).toBe(false);
-
-        const src_paths = engine_config.getSourcePaths();
-        expect(src_paths).toStrictEqual(["/workspace"]);
-
-        const build_cmd = engine_config.getBuildCmd();
-        expect(build_cmd).toStrictEqual("");
-
-        fs.readFileSync.mockReset();
-    });
-
-    test('get cmd string shall return null string if not configured in settings', () => {
-        const engine_config = test_initiate_config("/cscope_path");
         workspace_config_mock.has.mockReturnValueOnce(false);
-        let engine_cmd_cfg = engine_config.getEngineCmdStrings();
-        expect(engine_cmd_cfg).toBe(null);
-        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
+        const database_path = engine_config.getDatabasePath();
+        expect(database_path).toStrictEqual("/workspace/.vscode/cscope");
+        expect(workspace_config_mock.has).toBeCalledWith("databasePath");
     });
 
-    test('get cmd string shall return object configured in settings', () => {
-        const engine_config = test_initiate_config("/cscope_path");
+    test('Configured with empty database path', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("");
+        const database_path = engine_config.getDatabasePath();
+        expect(database_path).toStrictEqual("/workspace/.vscode/cscope");
+        expect(workspace_config_mock.has).toBeCalledWith("databasePath");
+        expect(workspace_config_mock.get).toBeCalledWith("databasePath");
+    });
+
+    test('Configured with valid database path', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("${workspaceRoot}/my_data_base_path");
+        let database_path = engine_config.getDatabasePath();
+        expect(database_path).toStrictEqual("/workspace/my_data_base_path");
+        expect(workspace_config_mock.has).toBeCalledWith("databasePath");
+        expect(workspace_config_mock.get).toBeCalledWith("databasePath");
+
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("/my_data_base_path");
+        database_path = engine_config.getDatabasePath();
+        expect(database_path).toStrictEqual("/my_data_base_path");
+        expect(workspace_config_mock.has).toBeCalledWith("databasePath");
+        expect(workspace_config_mock.get).toBeCalledWith("databasePath");
+    });
+
+    test('open in new column is true', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(true);
+        const open_in_new_col = engine_config.openInNewCol();
+        expect(open_in_new_col).toStrictEqual(true);
+        expect(workspace_config_mock.has).toBeCalledWith("openInNewCol");
+        expect(workspace_config_mock.get).toBeCalledWith("openInNewCol");
+    });
+
+    test('open in new column is false', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(false);
+        const open_in_new_col = engine_config.openInNewCol();
+        expect(open_in_new_col).toStrictEqual(false);
+        expect(workspace_config_mock.has).toBeCalledWith("openInNewCol");
+        expect(workspace_config_mock.get).toBeCalledWith("openInNewCol");
+    });
+
+    test('getEngineCmdStrings shall return object configured in settings if extension is enabled', () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+        enableExtention(true);
+
         workspace_config_mock.has.mockReturnValueOnce(true);
         workspace_config_mock.get.mockReturnValueOnce({abc:123, def:456});
         let engine_cmd_cfg = engine_config.getEngineCmdStrings();
         expect(engine_cmd_cfg).toStrictEqual({abc:123, def:456});
-        expect(workspace_config_mock.has).toBeCalledWith("executablePath");
+        expect(workspace_config_mock.has).toBeCalledWith("engineCommands");
+        expect(workspace_config_mock.get).toBeCalledWith("engineCommands");
     });
 
-    test('Configured to be disabled and print cmd exists but false', async () => {
+    test('getEngineCmdStrings shall return null object if extension is disabled', () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+        enableExtention(false);
 
-        const engine_config = test_initiate_config("/abc", true, false, true);
-
-        validateConfig(engine_config, "{}");
-
-        const exe_path = engine_config.getExePath();
-        expect(exe_path).toBe("");
-
-        const print_cmd = engine_config.getPrintCmd();
-        expect(print_cmd).toStrictEqual(false);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce({abc:123, def:456});
+        let engine_cmd_cfg = engine_config.getEngineCmdStrings();
+        expect(engine_cmd_cfg).toStrictEqual(null);
     });
 
-    test('Configured to be disabled and print cmd exists and true', async () => {
+    test('getEngineCmdStrings shall return null object if command is not configured', () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+        enableExtention(true);
 
-        const engine_config = test_initiate_config("/abc", true, false, true, true);
+        workspace_config_mock.has.mockReturnValueOnce(false);
+        let engine_cmd_cfg = engine_config.getEngineCmdStrings();
+        expect(engine_cmd_cfg).toStrictEqual(null);
+    });
 
-        validateConfig(engine_config, "{}");
+    test('Configured with valid source code path', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+        enableExtention(true);
 
-        const exe_path = engine_config.getExePath();
-        expect(exe_path).toBe("");
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(["path1", "path2"]);
+        const src_paths = engine_config.getSourcePaths();
+        expect(src_paths).toStrictEqual(["path1", "path2"]);
+        expect(workspace_config_mock.has).toBeCalledWith("sourceCodePaths");
+        expect(workspace_config_mock.get).toBeCalledWith("sourceCodePaths");
+    });
 
-        const print_cmd = engine_config.getPrintCmd();
-        expect(print_cmd).toStrictEqual(true);
+    test('Configured with invalid source code path', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        enableExtention(true);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce("path1");
+        let src_paths = engine_config.getSourcePaths();
+        expect(src_paths).toStrictEqual(["/workspace"]);
+        expect(workspace_config_mock.has).toBeCalledWith("sourceCodePaths");
+        expect(workspace_config_mock.get).toBeCalledWith("sourceCodePaths");
+
+        enableExtention(true);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(["path1", false]);
+         src_paths = engine_config.getSourcePaths();
+        expect(src_paths).toStrictEqual(["/workspace"]);
+        expect(workspace_config_mock.has).toBeCalledWith("sourceCodePaths");
+        expect(workspace_config_mock.get).toBeCalledWith("sourceCodePaths");
+    });
+
+    test('Configured with valid source code path but extension is disabled', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        enableExtention(false);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(["path1"]);
+        let src_paths = engine_config.getSourcePaths();
+        expect(src_paths).toStrictEqual([]);
+    });
+
+    test('print command line is set to true but extension is disabled', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        enableExtention(false);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(true);
+        let src_paths = engine_config.getPrintCmd();
+        expect(src_paths).toStrictEqual(false);
+    });
+
+    test('print command line is set to true', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        enableExtention(true);
+        workspace_config_mock.has.mockReturnValueOnce(true);
+        workspace_config_mock.get.mockReturnValueOnce(true);
+        let src_paths = engine_config.getPrintCmd();
+        expect(src_paths).toStrictEqual(true);
+        expect(workspace_config_mock.has).toBeCalledWith("printCmdBeforeExecute");
+        expect(workspace_config_mock.get).toBeCalledWith("printCmdBeforeExecute");
+    });
+
+    test('print command line is not configured', async () => {
+        const engine_config = new ExtensionConfig(workspace_config_mock, "/workspace");
+
+        enableExtention(true);
+        workspace_config_mock.has.mockReturnValueOnce(false);
+        let src_paths = engine_config.getPrintCmd();
+        expect(src_paths).toStrictEqual(false);
+        expect(workspace_config_mock.has).toBeCalledWith("printCmdBeforeExecute");
     });
 });
