@@ -62,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (vscode.workspace.rootPath) {
         const myconfig = vscode.workspace.getConfiguration('scope4code');
-        ext_config = new ExtensionConfig(myconfig, get_config_path(), vscode.workspace.rootPath);
+        ext_config = new ExtensionConfig(myconfig, vscode.workspace.rootPath);
         enableScope = ext_config.enabled();
     }
 
@@ -70,8 +70,6 @@ export function activate(context: vscode.ExtensionContext) {
         status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         context.subscriptions.push(status);
         
-        ext_config.validateConfig();
-            
 //        configurations = JSON.parse(loadConfiguration());
 //        validateConfiguration(configurations);
         // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -79,7 +77,6 @@ export function activate(context: vscode.ExtensionContext) {
 //        const database_path = getDatabasePath(configurations.engine_configurations[0].cscope.database_path);
 //        const build_command = configurations.engine_configurations[0].cscope.build_command;
         const database_path = ext_config.getDatabasePath();
-        const build_command = ext_config.getBuildCmd();
         process.env.PATH = ext_config.getExePath() + ":" + process.env.PATH;
         console.log(process.env.PATH);
 
@@ -160,11 +157,9 @@ function validateConfiguration(configuration:any) {
 
 async function buildDataBase()
 {
-    ext_config.validateConfig();
     const sourcePaths = ext_config.getSourcePaths();
 
     const database_path = ext_config.getDatabasePath();
-    const build_command = ext_config.getBuildCmd();
 
     let paths = [];
     sourcePaths.forEach((path) => {

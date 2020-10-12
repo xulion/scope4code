@@ -32,7 +32,6 @@ export class DefinitionProvider implements vscode.DefinitionProvider {
                 let fileName = line.fileName;
                 if (!path.isAbsolute(fileName))
                 fileName = path.join(vscode.workspace.rootPath, fileName);
-//                console.log(fileName);
                 const lineNum = line.lineNum - 1;
                 let start_pos = new vscode.Position(lineNum, line.colStart);
                 let end_pos = new vscode.Position(lineNum, line.colEnd);

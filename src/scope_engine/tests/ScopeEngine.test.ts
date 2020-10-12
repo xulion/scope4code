@@ -549,9 +549,9 @@ describe('ScopeEngine test', () => {
 
         const engine = new ScopeEngine(["folder1"], "/cscope_abc", undefined, null);
         cmdGenInterface.findTextCmd.mockReturnValueOnce("cmd find text of ${text}");
-        const result = await engine.searchText("function_abc");
+        const result = await engine.searchText("function abc");
 
-        verifyCmdResult(true, "cmd", ["find", "text", "of", "function_abc"], {cwd : "/cscope_abc"});
+        verifyCmdResult(true, "cmd", ["find", "text", "of", "function abc"], {cwd : "/cscope_abc"});
     });
 
     test('search text fail', async () => {

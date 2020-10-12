@@ -1,9 +1,9 @@
 # VS Code cscope support
-This extension add cscope support for Visual Studio Code. Supports C/C++ only (all other languages are not tested). 
-This extension is still in preliminary stage. For any issue you have, pleases log it [here](https://github.com/xulion/scope4code/issues). Your help can improve this extension.
+This extension add cscope support to Visual Studio Code. It supports C/C++ only (all other languages are not tested). 
+For any issue you have, pleases log it [here](https://github.com/xulion/scope4code/issues). Your help can improve this extension.
 
 ## Who may need this extension
-Visual Studio Code C/C++ extension has support for symbol parsing and searching, which is based on Clang tag system. However, when working with a very large projects (over 10K files), it could be very slow and annoying (based on my experience):
+Visual Studio Code C/C++ extension has the support for symbol parsing and searching, which is based on Clang tag system. However, when working with a very large projects (over 10K files), it could be very slow and annoying (based on my experience):
 * It would try search all the folders for all source code while creating database. It takes hours to build the database.
 * There is no option to ignore symbolic link (Leaves no chance for developer to optimize the build, unless developper is happenly using CMake system).
 * No easy way to exclude unwanted file when the project structure is complex.
@@ -33,11 +33,15 @@ scope4code uses cscope, which works very well with large project. Database build
     * Cscope: Find functions calling this function.
     * Cscope: Find this text string.
 * Configuration:
-    * Configuration is supported via cscope_conf.json. This file will be automatically creted in .vscode folder once the extension is enabled.
+    * Configuration for this extension not moved to vscode settings. cscope_conf.json is no longer supported since version 0.2.0.
     * Below settings are supported:
-        * open_new_column - This flag controls how shall new .find window shall be opened. 'yes' means it shall be opened in a separate column while 'no' will open in a new tab. Default setting is no since v0.0.5.
-        * engine_configurations.cscope.paths - This is an array of the paths where all source code files need to be parsed. It allows to include paths that outside of the vs code project. Default value is ${workspaceRoot}.
-        * engine_configurations.cscope.database_path - The path indicates where the cscope database should be built/and found. Default value is ${workspaceRoot}/.vscode/cscope as this was the default path before.
+        * enableScope - This can be used to disable this extension for a workspace (or globally depends on which setting is updated).
+        * executablePath - Path (absolute) where cscope executable resides.
+        * printCmdBeforeExecute - A debugging flag. Enabling it the engine will show full commandline via notification window during search and build. This is helpful when there is any issue.
+        * openInNewCol - Enable it the search result will be opened in a new column.
+        * sourceCodePaths - This is an array of the paths where all source code files need to be parsed. It allows to include paths that outside of the vs code project. Default value is ${workspaceRoot}.
+        * databasePath - The path indicates where the cscope database should be built/and found. Default value is ${workspaceRoot}/.vscode/cscope as this was the default path before.
+        * engineCommands - Commands used for build and search. See "Command customization" for detailed description.
 * Command customization 
     * Starting from version 0.1.00, customized command is supported. By updating setting "scope4code.engineCommands", all commands used by this extension could be customized. Below example shows a setting with updated the search and find ref command for Linux and build command for Windows:
     ```

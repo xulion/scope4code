@@ -36,19 +36,24 @@ export default class ScopeEngine {
     }
 
     private async runSearchCmd(target_cmd : string, search_text : string) : Promise<boolean> {
-        target_cmd = this.filterCmdString(target_cmd, config_variable_str.SEARCH_TEXT, search_text);
         target_cmd = this.filterCmdString(target_cmd, config_variable_str.DATABASE_PATH, this.databasePath);
-        return await this.runCmdWithText(target_cmd);
+        return await this.runCmdWithText(target_cmd, search_text);
     }
 
-    async runCmdWithText(cmd : string) : Promise<boolean> {
-        if (this.cmdPrinter != null) {
-            this.cmdPrinter.notifyUser(cmd);
-        }
+    async runCmdWithText(cmd : string, search_text : string = "") : Promise<boolean> {
         const cmdArray = cmd.split(/[ \t]+/);
+
+        for (let index =0; index < cmdArray.length; ++index) {
+            cmdArray[index] = this.filterCmdString(cmdArray[index], config_variable_str.SEARCH_TEXT, search_text);
+        };
+
         let cmd_ret : cmd_result = {
             success : false, code : 0, stdout : "", stderr : "Unkown error"
         };
+
+        if (this.cmdPrinter != null) {
+            this.cmdPrinter.notifyUser(cmdArray.join(" "));
+        }
 
         if (this.databasePath) {
             cmd_ret = await utilities.run_command(cmdArray[0], cmdArray.slice(1), {cwd : this.databasePath});
