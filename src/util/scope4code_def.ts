@@ -29,7 +29,8 @@ export const config_field_str = {
     ENGINE_CMD_STR :         "engineCommands",
     DATABASE_PATH_STR :      "databasePath",
     OPEN_RESULT_IN_NEW_COL : "openInNewCol",
-    SOURCE_CODE_PATHS :      "sourceCodePaths"
+    SOURCE_CODE_PATHS :      "sourceCodePaths",
+    EXCLUDED_PATHS :         "excludedPaths"
 };
 
 export const default_config_values = {
