@@ -94,6 +94,11 @@
                     "${workspaceRoot}"
                 ]
             },
+            "scope4code.excludedPaths": {
+                "type": "array",
+                "default": [
+                ]
+            },
             "scope4code.engineCommands": {
                 "type": "object",
                 "default": {

@@ -40,6 +40,7 @@ scope4code uses cscope, which works very well with large project. Database build
         * printCmdBeforeExecute - A debugging flag. Enabling it the engine will show full commandline via notification window during search and build. This is helpful when there is any issue.
         * openInNewCol - Enable it the search result will be opened in a new column.
         * sourceCodePaths - This is an array of the paths where all source code files need to be parsed. It allows to include paths that outside of the vs code project. Default value is ${workspaceRoot}.
+        * excludedPaths - An array of rules to exclude files. Each entry shall be a regular expression. If the file paths matches the rule it would be removed from source file list when database is built. For example rule "/exclude/.*" will exclude any file under filder "/exclude/".
         * databasePath - The path indicates where the cscope database should be built/and found. Default value is ${workspaceRoot}/.vscode/cscope as this was the default path before.
         * engineCommands - Commands used for build and search. See "Command customization" for detailed description.
 * Command customization 

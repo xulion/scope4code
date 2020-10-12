@@ -77,7 +77,7 @@ export default class ScopeEngine {
         return this.lastRunResult.stderr;
     }
 
-    public async generateFileList():Promise<boolean> {
+    public async generateFileList(excluded_paths : string[] = []):Promise<boolean> {
         const cmd = this.cmdGenerator.listFileCmd();
 
         let file_list_string : string = "";
@@ -91,6 +91,14 @@ export default class ScopeEngine {
             }
             file_list_string += this.getStdOut();
         }
+        
+        if (Array.isArray(excluded_paths)) {
+            excluded_paths.forEach(path_rule => {
+                const match_rule = new RegExp(`${path_rule}\n`, 'g');
+                file_list_string = file_list_string.replace(match_rule, "");
+            });
+        }
+        
         if (result) {
             fs.writeFileSync(path.join(this.databasePath, 'cscope.files'), file_list_string);
         }

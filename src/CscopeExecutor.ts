@@ -103,7 +103,7 @@ export default class CscopeExecutor {
 
     private async internal_buildDataBase() : Promise<any>
     {
-        let result = await this.scopeEngine.generateFileList();
+        let result = await this.scopeEngine.generateFileList(this.scopConfig.getExcludedPaths());
         if (!result) {
             this.outInf.notifyUser(this.scopeEngine.getStdErr());
         }

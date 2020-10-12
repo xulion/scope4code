@@ -95,6 +95,35 @@ export default class ExtensionConfig {
         return src_paths;
     }
 
+    public getExcludedPaths() : string[] {
+        let excluded_paths = [];
+        if (this.enabled()) {
+            let configure_valid = false;
+            if (this.workspaceConfig && this.workspaceConfig.has(config_field_str.EXCLUDED_PATHS)) {
+                let code_paths = [];
+                code_paths = this.workspaceConfig.get(config_field_str.EXCLUDED_PATHS);
+
+                if (Array.isArray(code_paths)) {
+                    configure_valid = true;
+                    code_paths.forEach(element => {
+                        if (element === element.toString()) {
+                            excluded_paths.push(this.filterPathString(element, config_variable_str.WORK_SPACE_PATH, this.workspacePath));
+                        }
+                        else {
+                            configure_valid = false;
+                            this.lastError = "Invalid source path config";
+                        }
+                    });    
+                }
+            }
+
+            if (!configure_valid) {
+                excluded_paths = [];
+            }
+        }
+        return excluded_paths;
+    } 
+
     public getEngineCmdStrings() : object {
         let engine_cmd_srings = null;
         if (this.enabled()) {

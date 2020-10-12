@@ -226,6 +226,33 @@ describe('ScopeEngine test', () => {
         expect(fs.writeFileSync).toBeCalledWith("/cscope_abc/cscope.files", "file1.c\nfile1.c\nfile1.c\n");
     });
 
+    test('generate file list for multiple source folders with excluded paths', async () => {
+        setupRunCmdMock({success : true,
+            code : 0,
+            stdout : "file1.c\n/abc/1.c\n/exclude/a.c\n",
+            stderr : ""});
+
+        path.join.mockReturnValueOnce("/cscope_abc/cscope.files");
+
+        const engine = new ScopeEngine(["/folder1", "/folder2", "folder3"], "/cscope_abc", undefined, null);
+
+        cmdGenInterface.listFileCmd.mockReturnValue("cmd ${src_path} p2 p3    ${src_path}");
+        const result = await engine.generateFileList(["/exclude/.*"]);
+
+        expect(result).toBe(true);
+
+        expect(utilities.run_command).toBeCalledTimes(3);
+        expect(utilities.run_command).toBeCalledWith("cmd", ["/folder1", "p2", "p3", "/folder1"], {cwd : "/cscope_abc"});
+        expect(utilities.run_command).toBeCalledWith("cmd", ["/folder2", "p2", "p3", "/folder2"], {cwd : "/cscope_abc"});
+        expect(utilities.run_command).toBeCalledWith("cmd", ["folder3", "p2", "p3", "folder3"], {cwd : "/cscope_abc"});
+
+        expect(path.join).toBeCalledTimes(1);
+        expect(path.join).toBeCalledWith("/cscope_abc", "cscope.files");
+
+        expect(fs.writeFileSync).toBeCalledTimes(1);
+        expect(fs.writeFileSync).toBeCalledWith("/cscope_abc/cscope.files", "file1.c\n/abc/1.c\nfile1.c\n/abc/1.c\nfile1.c\n/abc/1.c\n");
+    });
+
     test('generate file list for multiple source folders then fail in the middle', async () => {
         cmd_builder.build.mockReturnValueOnce(cmdGenInterface);
         utilities.run_command.mockReturnValueOnce({success : true,
