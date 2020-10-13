@@ -2,6 +2,7 @@
 ### New Features:
 - All configurations are now moved to vscode setting.
 - Added support to exclude un-wanted files.
+- *IMPORTANT: Please read configuration section of readme to ensure setting is properly configured!*
 ### Bug fixing:
 - FIxed searching does not work when there are spaces in target text.
 

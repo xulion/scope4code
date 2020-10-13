@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "publisher": "xulion",
   "engines": {
-    "vscode": "^1.17.0"
+    "vscode": "^1.34.0"
   },
   "license": "SEE LICENSE IN LICENSE",
   "bugs": {
@@ -61,92 +61,92 @@
       "editor/context": []
     },
     "configuration": {
-        "title": "scope4code",
-        "properties": {
-            "scope4code.enableScope": {
-                "type": "boolean",
-                "default": true,
-                "description": "Enable Scope4code."
+      "title": "scope4code",
+      "properties": {
+        "scope4code.enableScope": {
+          "type": "boolean",
+          "default": true,
+          "scope": "language-overridable",
+          "description": "Enable scope4code."
+        },
+        "scope4code.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path of executables."
+        },
+        "scope4code.printCmdBeforeExecute": {
+          "type": "boolean",
+          "default": false,
+          "description": "Print command before execute."
+        },
+        "scope4code.databasePath": {
+          "type": "string",
+          "default": "${workspaceRoot}/.vscode/cscope",
+          "description": "cscope database path."
+        },
+        "scope4code.openInNewCol": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open search result in new column."
+        },
+        "scope4code.sourceCodePaths": {
+          "type": "array",
+          "default": [
+            "${workspaceRoot}"
+          ]
+        },
+        "scope4code.excludedPaths": {
+          "type": "array",
+          "default": []
+        },
+        "scope4code.engineCommands": {
+          "type": "object",
+          "default": {
+            "config_index": {
+              "cscope": {
+                "win32": 1,
+                "linux": 0
+              }
             },
-            "scope4code.executablePath": {
-                "type": "string",
-                "default": "",
-                "description": "Path of executables."
-            },
-            "scope4code.printCmdBeforeExecute": {
-                "type": "boolean",
-                "default": false,
-                "description": "Print command before execute."
-            },
-            "scope4code.databasePath": {
-                "type": "string",
-                "default": "${workspaceRoot}/.vscode/cscope",
-                "description": "cscope database path."
-            },
-            "scope4code.openInNewCol": {
-                "type": "boolean",
-                "default": false,
-                "description": "Open search result in new column."
-            },
-            "scope4code.sourceCodePaths": {
-                "type": "array",
-                "default": [
-                    "${workspaceRoot}"
-                ]
-            },
-            "scope4code.excludedPaths": {
-                "type": "array",
-                "default": [
-                ]
-            },
-            "scope4code.engineCommands": {
-                "type": "object",
-                "default": {
-                    "config_index" : {
-                        "cscope" : {
-                            "win32" : 1,
-                            "linux" : 0
-                        }
-                    },
-                    "config" : [
-                        {
-                            "find_cmd" : "find ${src_path} -type f -name *.c -o -type f -name *.h -o -type f -name *.cpp -o -type f -name *.cc -o -type f -name *.mm",
-                            "database_cmd" : "cscope -b -q -k",
-                            "find_all_ref" : "cscope -q -k -L0 ${text}",
-                            "find_define" : "cscope -q -k -L1 ${text}",
-                            "find_callee" : "cscope -q -k -L2 ${text}",
-                            "find_caller" : "cscope -q -k -L3 ${text}",
-                            "find_text" : "cscope -q -k -L4 ${text}"
-                        },
-                        {
-                            "find_cmd" : "cmd /C dir /s/a/b ${src_path}\\*.c ${src_path}\\*.h ${src_path}\\*.cpp ${src_path}\\*.cc ${src_path}\\*.mm",
-                            "database_cmd" : "cscope -b -q -k",
-                            "find_all_ref" : "cscope -q -k -L0 ${text}",
-                            "find_define" : "cscope -q -k -L1 ${text}",
-                            "find_callee" : "cscope -q -k -L2 ${text}",
-                            "find_caller" : "cscope -q -k -L3 ${text}",
-                            "find_text" : "cscope -q -k -L4 ${text}"
-                        }
-                    ]
-                }
-            }
+            "config": [
+              {
+                "find_cmd": "find ${src_path} -type f -name *.c -o -type f -name *.h -o -type f -name *.cpp -o -type f -name *.cc -o -type f -name *.mm",
+                "database_cmd": "cscope -b -q -k",
+                "find_all_ref": "cscope -q -k -L0 ${text}",
+                "find_define": "cscope -q -k -L1 ${text}",
+                "find_callee": "cscope -q -k -L2 ${text}",
+                "find_caller": "cscope -q -k -L3 ${text}",
+                "find_text": "cscope -q -k -L4 ${text}"
+              },
+              {
+                "find_cmd": "cmd /C dir /s/a/b ${src_path}\\*.c ${src_path}\\*.h ${src_path}\\*.cpp ${src_path}\\*.cc ${src_path}\\*.mm",
+                "database_cmd": "cscope -b -q -k",
+                "find_all_ref": "cscope -q -k -L0 ${text}",
+                "find_define": "cscope -q -k -L1 ${text}",
+                "find_callee": "cscope -q -k -L2 ${text}",
+                "find_caller": "cscope -q -k -L3 ${text}",
+                "find_text": "cscope -q -k -L4 ${text}"
+              }
+            ]
+          }
         }
+      }
     }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
+    "lint": "eslint . --ext .ts,.tsx",
     "watch": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "jest"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.18",
-    "@types/node": "^12.7.4",
-    "jest": "^24.9.0",
-    "ts-jest": "^24.0.2",
-    "typescript": "^3.6.2",
-    "vscode": "^1.1.36"
+    "@types/node": "^14.11.8",
+    "@types/vscode": "^1.34.0",
+    "@types/jest": "^26.0.14",
+    "jest": "^26.5.3",
+    "ts-jest": "^26.4.1",
+    "typescript": "^4.0.3"
   },
   "dependencies": {}
 }
