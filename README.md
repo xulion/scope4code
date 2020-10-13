@@ -33,7 +33,8 @@ scope4code uses cscope, which works very well with large project. Database build
     * Cscope: Find functions calling this function.
     * Cscope: Find this text string.
 * Configuration:
-    * Configuration for this extension not moved to vscode settings. cscope_conf.json is no longer supported since version 0.2.0.
+    * Configuration for this extension not moved to vscode settings. cscope_conf.json is no longer supported since version 0.2.0. By default the extension is enabled and it will parse all code in current workspace. Configuration can be changed via vscode's setting menu, pls see [here](https://code.visualstudio.com/docs/getstarted/settings) for how to manage setting.<br>
+     *Important Note: Most of the setting shall be configured under workspace setting so it only applies to current project. If the settings is added to user setting then all projects will be impacted!!!*
     * Below settings are supported:
         * enableScope - This can be used to disable this extension for a workspace (or globally depends on which setting is updated).
         * executablePath - Path (absolute) where cscope executable resides.
