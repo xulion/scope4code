@@ -82,7 +82,7 @@
         "scope4code.databasePath": {
           "type": "string",
           "default": "${workspaceRoot}/.vscode/cscope",
-          "description": "cscope database path."
+          "description": "IMPORTANT:Pls only configure this in workspace setting!!! cscope database path."
         },
         "scope4code.openInNewCol": {
           "type": "boolean",
@@ -93,11 +93,13 @@
           "type": "array",
           "default": [
             "${workspaceRoot}"
-          ]
+          ],
+          "description": "IMPORTANT:Pls only configure this in workspace setting!!! Code paths used to build database."
         },
         "scope4code.excludedPaths": {
           "type": "array",
-          "default": []
+          "default": [],
+          "description": " IMPORTANT:Pls only configure this in workspace setting!!! Rules to exclude files. Each entry shall be a regular expression. If the file paths matches the rule it would be removed from source file list when database is built. For example rule '/exclude/.*' will exclude any file under filder '/exclude/'."
         },
         "scope4code.engineCommands": {
           "type": "object",
